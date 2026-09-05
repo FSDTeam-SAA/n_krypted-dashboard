@@ -48,7 +48,6 @@ export default function SettingsPage() {
   // Loading states
   const [isSavingContact, setIsSavingContact] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
-
   const profileNameParts = (user?.name ?? "").trim().split(/\s+/);
   const resolvedFirstName = firstName ?? profileNameParts[0] ?? "";
   const resolvedLastName = lastName ?? profileNameParts.slice(1).join(" ");
@@ -521,6 +520,7 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
     </div>
   );
 }

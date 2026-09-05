@@ -30,7 +30,7 @@ export default function UserManagementPage() {
       }),
   });
   const selectableIds =
-    data?.data.filter((user) => user.role !== "admin").map((user) => user._id) ?? [];
+    data?.data.filter((user) => user.role === "user").map((user) => user._id) ?? [];
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
 
@@ -134,6 +134,7 @@ export default function UserManagementPage() {
               </th>
               <th className="py-4 px-5">Benutzername</th>
               <th className="py-4 px-5">E-Mail</th>
+              <th className="py-4 px-5">Rolle</th>
               <th className="py-4 px-5">Einchecken</th>
               <th className="py-4 px-5">Rezension</th>
               <th className="py-4 px-5">Status</th>
@@ -157,6 +158,9 @@ export default function UserManagementPage() {
                     <Skeleton className="w-36 h-4" />
                   </td>
                   <td className="py-3.5 px-5">
+                    <Skeleton className="w-24 h-4" />
+                  </td>
+                  <td className="py-3.5 px-5">
                     <Skeleton className="w-8 h-4" />
                   </td>
                   <td className="py-3.5 px-5">
@@ -175,7 +179,7 @@ export default function UserManagementPage() {
               ))
             ) : data?.data?.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-gray-500">
+                <td colSpan={8} className="py-12 text-center text-gray-500">
                   Keine Benutzer gefunden.
                 </td>
               </tr>
@@ -190,11 +194,13 @@ export default function UserManagementPage() {
                       type="checkbox"
                       checked={selectedIds.has(user._id)}
                       onChange={() => toggleSelected(user._id)}
-                      disabled={user.role === "admin"}
+                      disabled={user.role !== "user"}
                       aria-label={`${user.name} ausw\u00e4hlen`}
                       title={
                         user.role === "admin"
                           ? "Administratorkonten sind gesch\u00fctzt"
+                          : user.role === "restaurant_owner"
+                            ? "Restaurantbesitzer werden über die Restaurantverwaltung verwaltet"
                           : undefined
                       }
                       className="h-4 w-4 accent-[#0097A7] disabled:cursor-not-allowed disabled:opacity-40"
@@ -222,6 +228,15 @@ export default function UserManagementPage() {
 
                   {/* E-Mail */}
                   <td className="py-3.5 px-5 text-[#718096]">{user.email}</td>
+
+                  {/* Role */}
+                  <td className="py-3.5 px-5 text-[#718096]">
+                    {user.role === "restaurant_owner"
+                      ? "Restaurantbesitzer"
+                      : user.role === "admin"
+                        ? "Administrator"
+                        : "Benutzer"}
+                  </td>
 
                   {/* Einchecken count */}
                   <td className="py-3.5 px-5 text-[#1E1E1E] font-medium">

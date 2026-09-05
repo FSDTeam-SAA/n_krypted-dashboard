@@ -12,6 +12,8 @@ import {
   LogOut,
   MapPinned,
   MessageSquareText,
+  ScrollText,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +47,18 @@ const navigation = [
     href: "/reviews",
     icon: MessageSquareText,
     pattern: /^\/reviews/,
+  },
+  {
+    name: "Geschäftsbedingungen",
+    href: "/terms-and-conditions",
+    icon: ScrollText,
+    pattern: /^\/terms-and-conditions/,
+  },
+  {
+    name: "Datenschutzrichtlinie",
+    href: "/privacy-policy",
+    icon: ShieldCheck,
+    pattern: /^\/privacy-policy/,
   },
   {
     name: "Einstellungen",
@@ -84,7 +98,7 @@ export function Sidebar({ onNavClick, className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "relative flex flex-col justify-between w-64 min-h-screen bg-white border-r border-[#F0ECE1] py-6 px-4 select-none z-20 shadow-xs",
+        "relative flex min-h-screen w-64 flex-col justify-between border-r border-[#F0ECE1] bg-white px-3 py-4 shadow-xs select-none z-20 sm:px-4 sm:py-6",
         className
       )}
     >
@@ -116,7 +130,7 @@ export function Sidebar({ onNavClick, className }: SidebarProps) {
         </div>
 
         {/* Navigation links */}
-        <nav className="flex flex-col gap-2 relative z-10">
+        <nav className="relative z-10 flex flex-col gap-1.5">
           {visibleNavigation.map((item) => {
             const isActive = item.pattern.test(pathname);
             const Icon = item.icon;
@@ -127,7 +141,7 @@ export function Sidebar({ onNavClick, className }: SidebarProps) {
                 href={item.href}
                 onClick={onNavClick}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-full transition-all duration-200",
+                  "flex min-w-0 items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-all duration-200 sm:px-4 sm:py-3",
                   isActive
                     ? "bg-[#0097A7] text-white shadow-sm font-semibold translate-x-1"
                     : "text-[#2D3748] hover:bg-[#F8F9FA] hover:text-[#0097A7]"
@@ -139,7 +153,7 @@ export function Sidebar({ onNavClick, className }: SidebarProps) {
                     isActive ? "text-white" : "text-[#2D3748]"
                   )}
                 />
-                <span>{item.name}</span>
+                <span className="truncate">{item.name}</span>
               </Link>
             );
           })}

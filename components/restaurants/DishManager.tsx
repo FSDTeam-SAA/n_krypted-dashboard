@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChefHat, ImagePlus, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -14,13 +14,27 @@ import {
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
+
+const maxDishImages = 6;
+
+const existingDishImages = (dish: DishItem): string[] => {
+  const images = (dish.images ?? []).filter(Boolean);
+  if (images.length > 0) return images;
+  return dish.image ? [dish.image] : [];
+};
 
 const emptyDish: DishPayload = {
   name: "",
   description: "",
   price: 0,
   image: "",
+  images: [],
+  imageFiles: [],
   category: "",
+  specialtyDescription: "",
+  ingredients: [],
+  preparationProcess: "",
   isSignatureDish: false,
   isActive: true,
 };
@@ -29,19 +43,24 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<DishItem | null>(null);
   const [form, setForm] = useState<DishPayload>(emptyDish);
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [newPreviewUrls, setNewPreviewUrls] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const blobUrls = useRef<string[]>([]);
 
   useEffect(() => {
-    return () => {
-      if (previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+    return () => blobUrls.current.forEach(URL.revokeObjectURL);
+  }, []);
+
+  const clearNewPreviews = () => {
+    blobUrls.current.forEach(URL.revokeObjectURL);
+    blobUrls.current = [];
+    setNewPreviewUrls([]);
+  };
 
   const closeForm = () => {
     setEditing(null);
     setForm(emptyDish);
-    setPreviewUrl("");
+    clearNewPreviews();
     setShowForm(false);
   };
 
@@ -80,17 +99,24 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!form.imageFile && !form.image?.trim()) {
-      toast.error("Bitte laden Sie ein Gerichtsbild hoch oder geben Sie eine Bild-URL ein.");
+    if ((form.images?.length ?? 0) + (form.imageFiles?.length ?? 0) === 0) {
+      toast.error("Bitte laden Sie mindestens ein Gerichtsbild hoch.");
       return;
     }
-    saveMutation.mutate({ ...form, name: form.name.trim() });
+    saveMutation.mutate({
+      ...form,
+      name: form.name.trim(),
+      ingredients: (form.ingredients ?? [])
+        .flatMap((item) => item.split(","))
+        .map((item) => item.trim())
+        .filter(Boolean),
+    });
   };
 
   const openCreateForm = () => {
     setEditing(null);
     setForm(emptyDish);
-    setPreviewUrl("");
+    clearNewPreviews();
     setShowForm(true);
   };
 
@@ -101,18 +127,65 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
       description: dish.description ?? "",
       price: dish.price,
       image: dish.image ?? "",
+      images: existingDishImages(dish),
+      imageFiles: [],
       category: dish.category ?? "",
+      specialtyDescription: dish.specialtyDescription ?? "",
+      ingredients: dish.ingredients ?? [],
+      preparationProcess: dish.preparationProcess ?? "",
       isSignatureDish: dish.isSignatureDish,
       isActive: dish.isActive,
     });
-    setPreviewUrl(dish.image ?? "");
+    clearNewPreviews();
     setShowForm(true);
   };
 
-  const selectImage = (file?: File) => {
-    if (!file) return;
-    setForm((current) => ({ ...current, imageFile: file }));
-    setPreviewUrl(URL.createObjectURL(file));
+  const selectImages = (files?: FileList | null) => {
+    if (!files?.length) return;
+    const available = Math.max(
+      0,
+      maxDishImages -
+        ((form.images?.length ?? 0) + (form.imageFiles?.length ?? 0))
+    );
+    const selected = Array.from(files).slice(0, available);
+    if (selected.length === 0) {
+      toast.error(`Maximal ${maxDishImages} Bilder sind erlaubt.`);
+      return;
+    }
+    const urls = selected.map((file) => URL.createObjectURL(file));
+    blobUrls.current.push(...urls);
+    setForm((current) => ({
+      ...current,
+      imageFiles: [...(current.imageFiles ?? []), ...selected],
+    }));
+    setNewPreviewUrls((current) => [...current, ...urls]);
+    if (selected.length < files.length) {
+      toast.info(`Es können maximal ${maxDishImages} Bilder gespeichert werden.`);
+    }
+  };
+
+  const removeExistingImage = (index: number) => {
+    setForm((current) => ({
+      ...current,
+      images: (current.images ?? []).filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
+  const removeNewImage = (index: number) => {
+    const url = newPreviewUrls[index];
+    if (url) {
+      URL.revokeObjectURL(url);
+      blobUrls.current = blobUrls.current.filter((item) => item !== url);
+    }
+    setNewPreviewUrls((current) =>
+      current.filter((_, itemIndex) => itemIndex !== index)
+    );
+    setForm((current) => ({
+      ...current,
+      imageFiles: (current.imageFiles ?? []).filter(
+        (_, itemIndex) => itemIndex !== index
+      ),
+    }));
   };
 
   const signatureCount = restaurant.dishes.filter(
@@ -141,27 +214,18 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
         </Button>
       </div>
 
-      {showForm && (
+      <Modal
+        isOpen={showForm}
+        onClose={closeForm}
+        maxWidth="max-w-5xl"
+        title={editing ? "Gericht bearbeiten" : "Neues Gericht hinzufügen"}
+        description="Gerichtsdaten und bis zu 6 Bilder verwalten. Alle Angaben werden in der App aus echten Daten angezeigt."
+      >
         <form
           key={editing?._id ?? "new-dish"}
           onSubmit={submit}
-          className="grid gap-4 rounded-2xl border border-[#FEEFB3] bg-[#FFFBE9] p-5 sm:grid-cols-2"
+          className="grid gap-5 sm:grid-cols-2"
         >
-          <div className="flex items-center justify-between gap-3 sm:col-span-2">
-            <div>
-              <h4 className="font-bold text-[#1E1E1E]">
-                {editing ? "Gericht bearbeiten" : "Neues Gericht erstellen"}
-              </h4>
-              <p className="mt-1 text-xs text-[#718096]">
-                Pflichtfelder: Name, Preis und Bild.
-              </p>
-            </div>
-            <Button type="button" variant="ghost" size="icon" onClick={closeForm}>
-              <X className="h-4 w-4" />
-              <span className="sr-only">Formular schließen</span>
-            </Button>
-          </div>
-
           <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155]">
             <span>Name des Gerichts</span>
             <Input
@@ -185,7 +249,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
               }
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155]">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155] sm:col-span-2">
             <span>Kategorie</span>
             <Input
               placeholder="z. B. Hauptspeise, Vorspeise"
@@ -195,41 +259,90 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
               }
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155]">
-            <span>Bild-URL (optional bei Datei-Upload)</span>
-            <Input
-              type="url"
-              placeholder="https://..."
-              value={form.image}
-              onChange={(event) => {
-                const image = event.target.value;
-                setForm({ ...form, image, imageFile: undefined });
-                setPreviewUrl(image);
-              }}
-            />
-          </label>
 
           <div className="space-y-3 sm:col-span-2">
-            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-[#90CAF9] bg-white px-4 py-4 text-sm font-semibold text-[#0097A7] transition-colors hover:bg-[#F2FCFD]">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-[#334155]">Gerichtsbilder</p>
+                <p className="mt-1 text-xs text-[#718096]">
+                  JPG, PNG oder WebP · maximal {maxDishImages} Bilder
+                </p>
+              </div>
+              <span className="rounded-full bg-[#E8F8FA] px-2.5 py-1 text-xs font-semibold text-[#007E93]">
+                {(form.images?.length ?? 0) + (form.imageFiles?.length ?? 0)}/{maxDishImages}
+              </span>
+            </div>
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-[#90CAF9] bg-[#F8FCFD] px-4 py-5 text-sm font-semibold text-[#0097A7] transition-colors hover:bg-[#ECFAFC]">
               <ImagePlus className="h-5 w-5" />
-              <span>Gerichtsbild hochladen</span>
+              <span>Mehrere Bilder auswählen</span>
               <input
                 type="file"
+                multiple
                 accept="image/jpeg,image/png,image/webp"
                 className="sr-only"
-                onChange={(event) => selectImage(event.target.files?.[0])}
+                onChange={(event) => {
+                  selectImages(event.target.files);
+                  event.currentTarget.value = "";
+                }}
               />
             </label>
-            {previewUrl && (
-              <div className="relative h-48 overflow-hidden rounded-xl border border-[#F0ECE1] bg-slate-100">
-                <Image
-                  src={previewUrl}
-                  alt="Vorschau des Gerichtsbilds"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 720px"
-                  unoptimized={previewUrl.startsWith("blob:")}
-                />
+            {((form.images?.length ?? 0) > 0 || newPreviewUrls.length > 0) && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {(form.images ?? []).map((url, index) => (
+                  <div
+                    key={`existing-${url}-${index}`}
+                    className="relative aspect-[4/3] overflow-hidden rounded-xl border border-[#E3E8EE] bg-slate-50"
+                  >
+                    <Image
+                      src={url}
+                      alt={`Gerichtsbild ${index + 1}`}
+                      fill
+                      className="object-contain p-1"
+                      sizes="(max-width: 640px) 50vw, 280px"
+                    />
+                    {index === 0 && (
+                      <span className="absolute bottom-2 left-2 rounded-full bg-black/65 px-2 py-1 text-[10px] font-semibold text-white">
+                        Hauptbild
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(index)}
+                      className="absolute right-2 top-2 rounded-full bg-white/95 p-1.5 text-red-500 shadow"
+                      title="Bild entfernen"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                {newPreviewUrls.map((url, index) => (
+                  <div
+                    key={url}
+                    className="relative aspect-[4/3] overflow-hidden rounded-xl border border-[#8ED9E2] bg-slate-50"
+                  >
+                    <Image
+                      src={url}
+                      alt={`Neues Gerichtsbild ${index + 1}`}
+                      fill
+                      className="object-contain p-1"
+                      sizes="(max-width: 640px) 50vw, 280px"
+                      unoptimized
+                    />
+                    {(form.images?.length ?? 0) === 0 && index === 0 && (
+                      <span className="absolute bottom-2 left-2 rounded-full bg-black/65 px-2 py-1 text-[10px] font-semibold text-white">
+                        Hauptbild
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeNewImage(index)}
+                      className="absolute right-2 top-2 rounded-full bg-white/95 p-1.5 text-red-500 shadow"
+                      title="Bild entfernen"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -242,6 +355,44 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
               value={form.description}
               onChange={(event) =>
                 setForm({ ...form, description: event.target.value })
+              }
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155] sm:col-span-2">
+            <span>Spezialität des Gerichts (optional)</span>
+            <textarea
+              className="min-h-20 w-full rounded-xl border border-[#90CAF9] bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-[#0097A7]"
+              placeholder="Was macht dieses Gericht besonders?"
+              value={form.specialtyDescription}
+              onChange={(event) =>
+                setForm({ ...form, specialtyDescription: event.target.value })
+              }
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155]">
+            <span>Hauptzutaten (durch Komma trennen)</span>
+            <Input
+              placeholder="z. B. Rindfleisch, Salz, Pfeffer"
+              value={(form.ingredients ?? []).join(", ")}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  ingredients: [event.target.value],
+                })
+              }
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155]">
+            <span>Zubereitungsmethode (optional)</span>
+            <textarea
+              className="min-h-20 w-full rounded-xl border border-[#90CAF9] bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-[#0097A7]"
+              placeholder="Zubereitung des Gerichts beschreiben..."
+              value={form.preparationProcess}
+              onChange={(event) =>
+                setForm({ ...form, preparationProcess: event.target.value })
               }
             />
           </label>
@@ -290,7 +441,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
             </Button>
           </div>
         </form>
-      )}
+      </Modal>
 
       {restaurant.dishes.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[#CBD5E1] p-10 text-center text-sm text-[#718096]">
@@ -307,17 +458,22 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
                 dish.isSignatureDish ? "border-[#F2CE5C]" : "border-[#F0ECE1]"
               }`}
             >
-              <div className="relative h-40 bg-slate-100">
-                {dish.image ? (
+              <div className="relative h-56 bg-slate-50">
+                {existingDishImages(dish)[0] ? (
                   <Image
-                    src={dish.image}
+                    src={existingDishImages(dish)[0]}
                     alt={dish.name}
                     fill
-                    className="object-cover"
+                    className="object-contain p-2"
                     sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                   />
                 ) : (
                   <ChefHat className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 text-slate-300" />
+                )}
+                {existingDishImages(dish).length > 1 && (
+                  <span className="absolute bottom-2 right-2 rounded-full bg-black/65 px-2 py-1 text-[10px] font-semibold text-white">
+                    {existingDishImages(dish).length} Bilder
+                  </span>
                 )}
               </div>
               <div className="p-4">

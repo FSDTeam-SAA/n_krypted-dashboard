@@ -46,7 +46,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden sm:items-center sm:p-4 md:p-6"
       aria-modal="true"
       role="dialog"
     >
@@ -59,14 +59,15 @@ export function Modal({
 
       {/* Modal Card */}
       <div
-        className={`relative w-full ${maxWidth} my-auto rounded-3xl border border-[#F0ECE1] bg-white shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] z-10`}
+        className={`relative z-10 flex h-[96dvh] w-full ${maxWidth} flex-col overflow-hidden rounded-t-3xl border border-[#E8EDF2] bg-white shadow-2xl transition-all duration-200 animate-in fade-in slide-in-from-bottom-4 sm:h-auto sm:max-h-[92dvh] sm:rounded-3xl sm:zoom-in-95`}
       >
+        <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-slate-200 sm:hidden" />
         {/* Header */}
         {(title || description) && (
-          <div className="flex items-start justify-between border-b border-[#F0ECE1] px-6 py-5 sm:px-8">
-            <div className="space-y-1">
+          <div className="flex shrink-0 items-start justify-between border-b border-[#E8EDF2] bg-gradient-to-r from-white to-[#F5FCFD] px-5 py-4 sm:px-8 sm:py-5">
+            <div className="min-w-0 space-y-1 pr-4">
               {title && (
-                <h2 className="text-lg font-bold text-[#1E1E1E] sm:text-xl">
+                <h2 className="truncate text-lg font-bold text-[#1E1E1E] sm:text-xl">
                   {title}
                 </h2>
               )}
@@ -79,7 +80,7 @@ export function Modal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full p-2 text-gray-400 hover:bg-[#FFFBE9] hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0097A7]"
+              className="shrink-0 rounded-xl border border-transparent p-2 text-gray-400 transition-colors hover:border-[#DCEEF1] hover:bg-white hover:text-[#007E93] focus:outline-none focus:ring-2 focus:ring-[#0097A7]"
               title="Schließen"
             >
               <X className="h-5 w-5" />
@@ -88,7 +89,7 @@ export function Modal({
         )}
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+        <div className="min-h-0 flex-1 overscroll-contain overflow-y-auto p-5 sm:p-8">
           {children}
         </div>
       </div>

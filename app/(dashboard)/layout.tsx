@@ -13,7 +13,7 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#FFFBE9] flex">
+    <div className="flex min-h-screen min-w-0 bg-[#FFFBE9]">
       {/* Desktop Sidebar (visible on lg screens) */}
       <Sidebar className="hidden lg:flex shrink-0 sticky top-0 h-screen overflow-y-auto" />
 
@@ -26,7 +26,7 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#FFFBE9]">
         <Header onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
-        <main className="flex-1 w-full p-4 sm:p-6 lg:p-8">
+        <main className="w-full min-w-0 flex-1 p-3 sm:p-5 lg:p-8">
           {children}
         </main>
       </div>

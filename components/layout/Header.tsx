@@ -18,7 +18,9 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
     if (pathname === "/") return "Dashboard-Übersicht";
     if (pathname.startsWith("/users")) return "Benutzerverwaltung";
     if (pathname.startsWith("/restaurants")) return "Restaurant Management";
-    if (pathname.startsWith("/reviews")) return "Top-Bewertungen";
+    if (pathname.startsWith("/reviews")) return "Bewertungen";
+    if (pathname.startsWith("/terms-and-conditions")) return "Geschäftsbedingungen";
+    if (pathname.startsWith("/privacy-policy")) return "Datenschutzrichtlinie";
     if (pathname.startsWith("/settings")) return "Einstellungen";
     return "Dashboard";
   };
@@ -33,8 +35,8 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
   const userAvatar = user?.avatar || user?.image;
 
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-[#F0ECE1] sticky top-0 z-30 shadow-2xs">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-[#F0ECE1] bg-white px-3 py-3 shadow-2xs sm:px-5 lg:px-6">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         {/* Mobile menu trigger */}
         <button
           onClick={onOpenMobileMenu}
@@ -45,13 +47,13 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
         </button>
 
         {/* Page title */}
-        <h1 className="text-xl sm:text-2xl font-bold text-[#1E1E1E] tracking-tight">
+        <h1 className="truncate text-base font-bold tracking-tight text-[#1E1E1E] sm:text-xl lg:text-2xl">
           {getPageTitle()}
         </h1>
       </div>
 
       {/* Admin Profile indicator at top right */}
-      <div className="flex items-center gap-3 bg-transparent">
+      <div className="flex shrink-0 items-center gap-2 bg-transparent sm:gap-3">
         <div className="text-right hidden sm:block">
           <div className="text-sm font-bold text-[#1E1E1E] leading-tight">
             {userName || "\u2014"}
@@ -61,7 +63,7 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
           </div>
         </div>
 
-        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[#CBD5E1] bg-gray-100 shrink-0 flex items-center justify-center">
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#CBD5E1] bg-gray-100 sm:h-10 sm:w-10">
           {userAvatar ? (
             <Image
               src={userAvatar}

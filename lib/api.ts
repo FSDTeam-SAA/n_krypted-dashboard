@@ -153,7 +153,11 @@ export interface DishItem {
   description?: string;
   price: number;
   image?: string;
+  images?: string[];
   category?: string;
+  specialtyDescription?: string;
+  ingredients?: string[];
+  preparationProcess?: string;
   isSignatureDish: boolean;
   isActive: boolean;
 }
@@ -165,6 +169,7 @@ export interface RestaurantPayload {
   price?: number;
   category?: string;
   images?: string[];
+  imageFiles?: File[];
   offers?: string[];
   location: {
     address: string;
@@ -189,8 +194,12 @@ export interface DishPayload {
   description?: string;
   price: number;
   image?: string;
-  imageFile?: File;
+  images?: string[];
+  imageFiles?: File[];
   category?: string;
+  specialtyDescription?: string;
+  ingredients?: string[];
+  preparationProcess?: string;
   isSignatureDish?: boolean;
   isActive?: boolean;
 }
@@ -228,6 +237,22 @@ export interface ReviewItem {
   reviewComment: string;
   ratings: number;
   createdAt?: string;
+}
+
+export interface ReviewRestaurantSummary {
+  restaurantId: string;
+  restaurantName: string;
+  restaurantImages: string[];
+  location?: { address?: string; city?: string; country?: string };
+  totalReviews: number;
+  averageRating: number;
+  latestReviewAt?: string;
+}
+
+export interface LegalContent {
+  termsHtml: string;
+  privacyHtml: string;
+  updatedAt?: string | null;
 }
 
 export interface CheckInItem {
@@ -508,11 +533,33 @@ const createDishFormData = (data: DishPayload): FormData => {
   formData.append("price", String(data.price));
   formData.append("description", data.description ?? "");
   formData.append("category", data.category ?? "");
+  formData.append("specialtyDescription", data.specialtyDescription ?? "");
+  formData.append("ingredients", JSON.stringify(data.ingredients ?? []));
+  formData.append("preparationProcess", data.preparationProcess ?? "");
   formData.append("isSignatureDish", String(Boolean(data.isSignatureDish)));
   formData.append("isActive", String(data.isActive ?? true));
 
-  if (data.imageFile) formData.append("image", data.imageFile);
-  else if (data.image) formData.append("existingImage", data.image);
+  formData.append("existingImages", JSON.stringify(data.images ?? []));
+  data.imageFiles?.forEach((file) => formData.append("images", file));
+
+  return formData;
+};
+
+const createRestaurantFormData = (
+  data: RestaurantPayload | AdminRestaurantPayload
+): FormData => {
+  const formData = new FormData();
+  formData.append("title", data.title);
+  formData.append("shortDescription", data.shortDescription ?? "");
+  formData.append("description", data.description);
+  formData.append("price", String(data.price ?? 0));
+  formData.append("location", JSON.stringify(data.location));
+  formData.append("existingImages", JSON.stringify(data.images ?? []));
+  formData.append("offers", JSON.stringify(data.offers ?? []));
+
+  if (data.category) formData.append("category", data.category);
+  if ("owner" in data) formData.append("owner", JSON.stringify(data.owner));
+  data.imageFiles?.forEach((file) => formData.append("images", file));
 
   return formData;
 };
@@ -547,19 +594,35 @@ export const restaurantApi = {
     return response.data.restaurant ? mapRestaurant(response.data.restaurant) : null;
   },
   submitMine: async (data: RestaurantPayload): Promise<RestaurantItem> => {
-    const response = await api.post("/owner/restaurant", data);
+    const response = await api.post(
+      "/owner/restaurant",
+      createRestaurantFormData(data),
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
     return mapRestaurant(response.data.restaurant);
   },
   resubmitMine: async (id: string, data: RestaurantPayload): Promise<RestaurantItem> => {
-    const response = await api.put(`/owner/restaurant/${id}`, data);
+    const response = await api.put(
+      `/owner/restaurant/${id}`,
+      createRestaurantFormData(data),
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
     return mapRestaurant(response.data.restaurant);
   },
   createWithOwner: async (data: AdminRestaurantPayload): Promise<RestaurantItem> => {
-    const response = await api.post("/admin/restaurants", data);
+    const response = await api.post(
+      "/admin/restaurants",
+      createRestaurantFormData(data),
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
     return mapRestaurant(response.data.restaurant);
   },
   updateRestaurant: async (id: string, data: RestaurantPayload): Promise<RestaurantItem> => {
-    const response = await api.put(`/admin/restaurants/${id}`, data);
+    const response = await api.put(
+      `/admin/restaurants/${id}`,
+      createRestaurantFormData(data),
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
     return mapRestaurant(response.data.restaurant);
   },
   updateApproval: async (
@@ -598,6 +661,17 @@ export const restaurantApi = {
 };
 
 export const reviewApi = {
+  getRestaurantSummaries: async (params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: ReviewRestaurantSummary[]; meta: MetaPagination }> => {
+    const response = await api.get('/review-restaurants', { params });
+    const data: ReviewRestaurantSummary[] = response.data?.data ?? [];
+    return {
+      data,
+      meta: response.data?.meta ?? emptyMeta(params, data.length),
+    };
+  },
   getAllReviews: async (params?: {
     page?: number;
     limit?: number;
@@ -625,6 +699,20 @@ export const reviewApi = {
   },
   bulkDeleteReviews: async (ids: string[]): Promise<BulkDeleteResponse> =>
     (await api.delete("/reviews/bulk", { data: { ids } })).data,
+};
+
+export const contentApi = {
+  getLegalContent: async (): Promise<LegalContent> => {
+    const response = await api.get('/content/legal');
+    return response.data?.content ?? { termsHtml: '', privacyHtml: '' };
+  },
+  updateLegalContent: async (payload: {
+    termsHtml?: string;
+    privacyHtml?: string;
+  }): Promise<LegalContent> => {
+    const response = await api.put('/content/legal', payload);
+    return response.data?.content;
+  },
 };
 
 export const statsApi = {

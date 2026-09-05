@@ -33,7 +33,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
       />
 
       {/* Drawer */}
-      <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col z-50 animate-in slide-in-from-left duration-200">
+      <div className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[88vw] flex-col overflow-y-auto bg-white shadow-2xl animate-in slide-in-from-left duration-200">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 z-30 cursor-pointer"
@@ -42,7 +42,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           <X className="w-5 h-5" />
         </button>
 
-        <Sidebar onNavClick={onClose} className="w-full border-r-0 shadow-none" />
+        <Sidebar onNavClick={onClose} className="min-h-full w-full border-r-0 shadow-none" />
       </div>
     </div>
   );

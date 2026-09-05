@@ -65,7 +65,7 @@ export default function LocationPickerMap({
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
@@ -81,21 +81,40 @@ export default function LocationPickerMap({
             className="pl-9"
           />
         </div>
-        <Button type="button" onClick={() => void search()} disabled={searching}>
-          Suchen
-        </Button>
-        <Button type="button" variant="outline" size="icon" onClick={locate} title="Mein Standort">
-          <LocateFixed className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            onClick={() => void search()}
+            disabled={searching}
+            className="flex-1 sm:flex-none"
+          >
+            Suchen
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={locate}
+            title="Mein Standort"
+            aria-label="Meinen Standort verwenden"
+          >
+            <LocateFixed className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-      <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-slate-100">
-        <Map center={center}>
+      <div className="relative z-0 isolate h-64 overflow-hidden rounded-2xl border border-[#E2E8F0] bg-slate-100 shadow-inner sm:h-72">
+        <Map center={center} className="min-h-0 rounded-none">
           <MapView center={center} />
           <MapClickHandler onSelect={(lat, lng) => void reverseGeocode(lat, lng)} />
           <MapMarker position={center}>Ausgewählter Restaurantstandort</MapMarker>
         </Map>
       </div>
-      <p className="text-xs text-[#718096]">Klicke auf die Karte, suche eine Adresse oder nutze deinen aktuellen Standort.</p>
+      <div className="flex items-start gap-2 rounded-xl bg-[#F1F9FA] px-3 py-2.5 text-[#58747A]">
+        <LocateFixed className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0097A7]" />
+        <p className="text-[11px] leading-4">
+          Klicken Sie auf die Karte, suchen Sie eine Adresse oder verwenden Sie Ihren aktuellen Standort.
+        </p>
+      </div>
     </div>
   );
 }

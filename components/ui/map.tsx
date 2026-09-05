@@ -29,7 +29,7 @@ export function Map({
       center={center}
       zoom={zoom}
       zoomControl={false}
-      className={cn("h-full min-h-80 w-full rounded-2xl", className)}
+      className={cn("relative z-0 h-full min-h-80 w-full rounded-2xl", className)}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -74,8 +74,22 @@ export function MapClickHandler({
 
 export function MapView({ center }: { center: LatLngExpression }) {
   const map = useMap();
+
   useEffect(() => {
     map.setView(center);
   }, [center, map]);
+
+  useEffect(() => {
+    const container = map.getContainer();
+    const frame = window.requestAnimationFrame(() => map.invalidateSize());
+    const observer = new ResizeObserver(() => map.invalidateSize({ pan: false }));
+    observer.observe(container);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [map]);
+
   return null;
 }

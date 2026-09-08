@@ -87,12 +87,12 @@ export function LegalContentEditorPage({
           disabled={legalQuery.isLoading || mutation.isPending || !html.trim() || !hasChanges}
           className="inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0097A7] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00838F] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
-          {mutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-          {mutation.isPending ? "Wird gespeichert..." : "Veröffentlichen"}
+          <Save
+            className={`h-4 w-4 ${mutation.isPending ? "animate-pulse" : ""}`}
+          />
+          <span>
+            {mutation.isPending ? "Wird gespeichert..." : "Veröffentlichen"}
+          </span>
         </button>
       </div>
 

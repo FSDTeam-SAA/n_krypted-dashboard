@@ -106,7 +106,7 @@ export function RestaurantForm({
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!imageFile && !isHttpUrl(image.trim())) {
+    if (!imageFile && ((!isEditing && !isHttpUrl(image.trim())) || (image.trim() && !isHttpUrl(image.trim())))) {
       setImageError("Bitte laden Sie ein Bild hoch oder geben Sie eine gültige Bild-URL ein.");
       return;
     }
@@ -114,7 +114,7 @@ export function RestaurantForm({
     const originalImages = restaurant?.images ?? [];
     const currentImageUrl = image.trim();
     const existingImages = imageFile
-      ? originalImages
+      ? originalImages.slice(1)
       : currentImageUrl === originalImages[0]
         ? originalImages
         : [currentImageUrl, ...originalImages.slice(1)].filter(Boolean);
@@ -220,7 +220,10 @@ export function RestaurantForm({
               {previewSource && (
                 <button
                   type="button"
+                  disabled={submitting}
+                  aria-label={imageFile ? "Neue Datei entfernen" : "Bild entfernen"}
                   onClick={() => {
+                    setImageError("");
                     if (imageFile) clearSelectedFile();
                     else {
                       setImage("");
@@ -300,6 +303,11 @@ export function RestaurantForm({
             {imageError && (
               <p className="text-xs font-medium text-red-600" role="alert">
                 {imageError}
+              </p>
+            )}
+            {isEditing && (!image || imageFile) && (
+              <p className="text-xs text-[#718096]">
+                Das bisherige Titelbild wird erst beim Speichern entfernt. Abbrechen behält das gespeicherte Bild. Nicht mehr verwendete Cloudinary-Dateien werden anschließend gelöscht.
               </p>
             )}
           </div>

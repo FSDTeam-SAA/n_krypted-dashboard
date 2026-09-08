@@ -77,3 +77,119 @@ body {
 .border-teal-brand {
   border-color: #0097A7;
 }
+/* React Quill legal-content editor */
+.rich-text-editor .ql-toolbar.ql-snow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #b2ebf2;
+  border-radius: 16px 16px 0 0;
+  background: #f8fcfc;
+  padding: 8px 10px;
+}
+
+.rich-text-editor .ql-toolbar.ql-snow .ql-formats {
+  margin-right: 4px;
+}
+
+.rich-text-editor .ql-toolbar.ql-snow button,
+.rich-text-editor .ql-toolbar.ql-snow .ql-picker-label {
+  border-radius: 8px;
+}
+
+.rich-text-editor .ql-toolbar.ql-snow button:hover,
+.rich-text-editor .ql-toolbar.ql-snow button:focus,
+.rich-text-editor .ql-toolbar.ql-snow button.ql-active,
+.rich-text-editor .ql-toolbar.ql-snow .ql-picker-label:hover,
+.rich-text-editor .ql-toolbar.ql-snow .ql-picker-label.ql-active {
+  background: #e0f7fa;
+  color: #00838f;
+}
+
+.rich-text-editor .ql-snow .ql-stroke {
+  stroke: currentColor;
+}
+
+.rich-text-editor .ql-snow .ql-fill {
+  fill: currentColor;
+}
+
+.rich-text-editor .ql-container.ql-snow {
+  border-color: #b2ebf2;
+  border-radius: 0 0 16px 16px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.rich-text-editor:focus-within .ql-toolbar.ql-snow,
+.rich-text-editor:focus-within .ql-container.ql-snow {
+  border-color: #0097a7;
+}
+
+.rich-text-editor .ql-editor {
+  min-height: var(--editor-min-height);
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 16px 20px;
+  color: #4a5568;
+  line-height: 1.75;
+}
+
+.rich-text-editor .ql-editor h1,
+.rich-text-editor .ql-editor h2,
+.rich-text-editor .ql-editor h3,
+.rich-text-editor .ql-editor h4,
+.rich-text-editor .ql-editor h5,
+.rich-text-editor .ql-editor h6 {
+  color: #1e1e1e;
+  font-weight: 700;
+}
+
+.rich-text-editor .ql-editor a {
+  color: #0097a7;
+}
+
+.rich-text-editor.is-disabled .ql-toolbar {
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.rich-text-editor .ql-picker.ql-header {
+  width: 150px;
+}
+
+.rich-text-editor .ql-picker.ql-header .ql-picker-label::before,
+.rich-text-editor .ql-picker.ql-header .ql-picker-item::before {
+  content: "Absatz (P)";
+}
+
+.rich-text-editor .ql-picker.ql-header .ql-picker-label[data-value="1"]::before,
+.rich-text-editor .ql-picker.ql-header .ql-picker-item[data-value="1"]::before {
+  content: "Überschrift 1 (H1)";
+}
+
+.rich-text-editor .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,
+.rich-text-editor .ql-picker.ql-header .ql-picker-item[data-value="2"]::before {
+  content: "Überschrift 2 (H2)";
+}
+
+.rich-text-editor .ql-picker.ql-header .ql-picker-label[data-value="3"]::before,
+.rich-text-editor .ql-picker.ql-header .ql-picker-item[data-value="3"]::before {
+  content: "Überschrift 3 (H3)";
+}
+
+.rich-text-editor .ql-picker.ql-header .ql-picker-label[data-value="4"]::before,
+.rich-text-editor .ql-picker.ql-header .ql-picker-item[data-value="4"]::before {
+  content: "Überschrift 4 (H4)";
+}
+
+.rich-text-editor .ql-picker.ql-header .ql-picker-label[data-value="5"]::before,
+.rich-text-editor .ql-picker.ql-header .ql-picker-item[data-value="5"]::before {
+  content: "Überschrift 5 (H5)";
+}
+
+.rich-text-editor .ql-picker.ql-header .ql-picker-label[data-value="6"]::before,
+.rich-text-editor .ql-picker.ql-header .ql-picker-item[data-value="6"]::before {
+  content: "Überschrift 6 (H6)";
+}

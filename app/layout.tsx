@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "react-quill-new/dist/quill.snow.css";
 import "./globals.css";
 import AuthProvider from "@/components/providers/AuthProvider";
 import QueryProvider from "@/components/providers/QueryProvider";

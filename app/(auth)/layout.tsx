@@ -12,7 +12,7 @@ export default function AuthLayout({
       <div className="absolute inset-0 -z-10">
         <Image
           src="/design/9ae1a2e55302f2437779582be5076f42d65da65e.jpg"
-          alt="Auth background"
+          alt="Hintergrund der Anmeldeseite"
           fill
           className="object-cover scale-105 filter blur-xs"
           priority

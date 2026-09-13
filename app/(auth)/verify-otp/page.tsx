@@ -71,11 +71,11 @@ function VerifyOtpContent() {
     try {
       setIsLoading(true);
       await authApi.verifyOtp({ email, code });
-      toast.success("Code erfolgreich verifiziert!");
+      toast.success("Code erfolgreich bestätigt!");
       router.push(`/reset-password?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`);
     } catch (err: unknown) {
       toast.error(
-        getApiErrorMessage(err, "Der Code konnte nicht verifiziert werden.")
+        getApiErrorMessage(err, "Der Code konnte nicht bestätigt werden.")
       );
     } finally {
       setIsLoading(false);
@@ -85,7 +85,7 @@ function VerifyOtpContent() {
   return (
     <div className="flex flex-col items-center text-center">
       <h2 className="text-xl sm:text-2xl font-bold text-[#1E1E1E] mb-2">
-        OTP überprüfen
+        Bestätigungscode prüfen
       </h2>
       <p className="text-xs sm:text-sm text-[#718096] max-w-sm mb-8 leading-relaxed">
         Bestätigen Sie Ihr Konto, um Signature Dish weiter zu entdecken.
@@ -120,7 +120,7 @@ function VerifyOtpContent() {
           {isLoading ? (
             <div className="flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Wird verifiziert...</span>
+              <span>Wird bestätigt...</span>
             </div>
           ) : (
             "Verifizieren"

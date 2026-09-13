@@ -6,10 +6,10 @@ import { API_BASE_URL } from "./api";
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: "Zugangsdaten",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        email: { label: "E-Mail", type: "email" },
+        password: { label: "Passwort", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -28,7 +28,7 @@ export const authOptions: NextAuthOptions = {
           const user = response.data.data;
           if (user.role !== "admin" && user.role !== "restaurant_owner") {
             throw new Error(
-              "This management dashboard is only available to administrators and restaurant owners."
+              "Dieses Verwaltungsportal ist nur für Administratoren und Restaurantbesitzer verfügbar."
             );
           }
           return {

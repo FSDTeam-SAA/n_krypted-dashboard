@@ -49,7 +49,7 @@ export default function RestaurantManagementPage() {
     onSuccess: () => {
       setIsModalOpen(false);
       setEditingRestaurant(null);
-      toast.success("Restaurant und Owner-Login wurden erfolgreich erstellt.");
+      toast.success("Restaurant und Zugang des Restaurantbesitzers wurden erstellt.");
       queryClient.invalidateQueries({ queryKey: ["restaurants"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },
@@ -160,8 +160,8 @@ export default function RestaurantManagementPage() {
         title={editingRestaurant ? "Restaurantdaten und Standort bearbeiten" : "Restaurant direkt erstellen"}
         description={
           editingRestaurant
-            ? `Stammdaten, Vorschaubild und Kartenposition für "${editingRestaurant.title}" anpassen. Signature Dishes werden separat verwaltet.`
-            : "Erstellt gleichzeitig den Login für den Restaurantbesitzer und genehmigt das Restaurant."
+            ? `Stammdaten, Vorschaubild und Kartenposition für "${editingRestaurant.title}" anpassen. Signature-Gerichte werden separat verwaltet.`
+            : "Erstellt gleichzeitig den Zugang für den Restaurantbesitzer und genehmigt das Restaurant."
         }
         maxWidth="max-w-4xl"
       >
@@ -261,7 +261,7 @@ export default function RestaurantManagementPage() {
                 <th className="w-48 px-5 py-4">Standort</th>
                 <th className="w-24 px-4 py-4 text-center">Bewertung</th>
                 <th className="w-24 px-4 py-4 text-center">Rezension</th>
-                <th className="w-32 px-4 py-4 text-center">Signature Dishes</th>
+                      <th className="w-32 px-4 py-4 text-center">Signature-Gerichte</th>
                 <th className="w-32 px-4 py-4 text-center">Genehmigung</th>
                 <th className="w-56 py-4 pl-4 pr-6 text-right">Aktion</th>
               </tr>
@@ -337,7 +337,7 @@ export default function RestaurantManagementPage() {
                         <Link
                           href={`/restaurants/${restaurant._id}/dishes`}
                           className="inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1 font-semibold text-[#0097A7] hover:bg-[#E0F7FA]"
-                          title="Signature Dishes verwalten"
+                          title="Signature-Gerichte verwalten"
                         >
                           <ChefHat className="h-4 w-4" />
                           <span>{signatureDishCount}/{restaurant.dishes.length}</span>
@@ -407,7 +407,7 @@ export default function RestaurantManagementPage() {
                           <Link
                             href={`/restaurants/${restaurant._id}/dishes`}
                             className="col-start-4 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-[#0097A7] transition-colors hover:bg-[#E0F7FA] hover:text-[#00838F]"
-                            title="Signature Dishes verwalten"
+                            title="Signature-Gerichte verwalten"
                           >
                             <ChefHat className="h-4 w-4" />
                           </Link>

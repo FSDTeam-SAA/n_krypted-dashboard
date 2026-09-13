@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 const navigation = [
   {
-    name: "Dashboard-Übersicht",
+    name: "Übersicht",
     href: "/",
     icon: LayoutDashboard,
     pattern: /^\/$/,
@@ -31,7 +31,7 @@ const navigation = [
     pattern: /^\/users/,
   },
   {
-    name: "Restaurant Management",
+    name: "Restaurantverwaltung",
     href: "/restaurants",
     icon: UtensilsCrossed,
     pattern: /^\/restaurants/,
@@ -55,7 +55,7 @@ const navigation = [
     pattern: /^\/terms-and-conditions/,
   },
   {
-    name: "Datenschutzrichtlinie",
+    name: "Datenschutzerklärung",
     href: "/privacy-policy",
     icon: ShieldCheck,
     pattern: /^\/privacy-policy/,
@@ -106,7 +106,7 @@ export function Sidebar({ onNavClick, className }: SidebarProps) {
       <div className="absolute top-0 left-0 w-24 h-36 pointer-events-none -z-0 overflow-hidden">
         <Image
           src="/design/Group 18.png"
-          alt="Decoration"
+          alt="Dekoration"
           width={100}
           height={150}
           className="object-contain object-top -translate-x-1 -translate-y-1"

@@ -112,7 +112,7 @@ export function RestaurantOwnerWorkspace() {
           Restaurant wartet auf Genehmigung
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-amber-800">
-          Dein Restaurant „{restaurant.title}“ wurde erfolgreich eingereicht. Sobald ein Administrator es genehmigt, werden deine Gerichte und Signature Dishes für Kunden sichtbar.
+          Ihr Restaurant „{restaurant.title}“ wurde eingereicht. Sobald es von einem Administrator genehmigt wurde, sind Ihre Gerichte und Signature-Gerichte für Kunden sichtbar.
         </p>
       </section>
     );
@@ -139,7 +139,7 @@ export function RestaurantOwnerWorkspace() {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         title="Restaurantangaben bearbeiten"
-        description={`Aktualisiere Details und Standort für „${restaurant.title}“.`}
+        description={`Bearbeiten Sie die Details und den Standort von „${restaurant.title}“.`}
         maxWidth="max-w-4xl"
       >
         <RestaurantForm
@@ -202,7 +202,7 @@ export function RestaurantOwnerWorkspace() {
         <div className="mt-4 flex items-center gap-2 text-xs text-emerald-800 bg-emerald-50 rounded-xl p-3">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
           <span>
-            Dein Restaurant ist live und für Kunden in der mobilen App auffindbar. Verwalte unten deine Gerichte und Signature Dishes.
+            Ihr Restaurant ist veröffentlicht und in der mobilen App auffindbar. Verwalten Sie unten Ihre Gerichte und Signature-Gerichte.
           </span>
         </div>
       </section>

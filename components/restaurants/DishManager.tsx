@@ -197,7 +197,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-bold text-[#1E1E1E]">Signature Dishes</h3>
+            <h3 className="text-lg font-bold text-[#1E1E1E]">Signature-Gerichte</h3>
             <span className="rounded-full bg-[#FFF3BF] px-2.5 py-1 text-xs font-semibold text-[#7A5D00]">
               {signatureCount} Signature / {restaurant.dishes.length} gesamt
             </span>
@@ -242,7 +242,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
               min="0"
               step="0.01"
               type="number"
-              placeholder="0.00"
+              placeholder="0,00"
               value={form.price}
               onChange={(event) =>
                 setForm({ ...form, price: Number(event.target.value) })
@@ -408,7 +408,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
                 className="mt-0.5 h-4 w-4 accent-[#0097A7]"
               />
               <span>
-                <strong className="block">Signature Dish</strong>
+                <strong className="block">Signature-Gericht</strong>
                 <small className="text-[#718096]">Als besondere Spezialität hervorheben.</small>
               </span>
             </label>
@@ -447,7 +447,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
         <div className="rounded-2xl border border-dashed border-[#CBD5E1] p-10 text-center text-sm text-[#718096]">
           <ChefHat className="mx-auto mb-3 h-9 w-9" />
           <p className="font-semibold text-[#334155]">Noch keine Gerichte vorhanden.</p>
-          <p className="mt-1">Fügen Sie das erste Gericht oder Signature Dish hinzu.</p>
+          <p className="mt-1">Fügen Sie das erste Gericht oder Signature-Gericht hinzu.</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -496,7 +496,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {dish.isSignatureDish && (
                     <span className="rounded-full bg-[#FFF3BF] px-2 py-1 text-[11px] font-semibold text-[#7A5D00]">
-                      Signature Dish
+                      Signature-Gericht
                     </span>
                   )}
                   <span

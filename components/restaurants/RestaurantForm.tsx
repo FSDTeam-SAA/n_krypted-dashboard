@@ -142,7 +142,7 @@ export function RestaurantForm({
     <form onSubmit={submit} className="space-y-6">
       {includeOwner && !isEditing && (
         <fieldset className="grid gap-4 rounded-2xl border border-[#FEEFB3] bg-[#FFFBE9] p-5 sm:grid-cols-2">
-          <legend className="px-2 text-sm font-bold text-[#1E1E1E]">Owner Login</legend>
+          <legend className="px-2 text-sm font-bold text-[#1E1E1E]">Zugang des Restaurantbesitzers</legend>
           <label className={labelClass}>
             <span>Name</span>
             <Input required placeholder="Name des Besitzers" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} />
@@ -186,7 +186,7 @@ export function RestaurantForm({
                 min="0"
                 step="0.01"
                 type="number"
-                placeholder="0.00"
+                placeholder="0,00"
                 value={price}
                 onChange={(event) => setPrice(event.target.value)}
               />

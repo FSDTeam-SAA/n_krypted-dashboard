@@ -6,8 +6,8 @@ import QueryProvider from "@/components/providers/QueryProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "Signature Dish - Admin Dashboard",
-  description: "N_Krypted / Signature Dish Administrator Dashboard",
+  title: "Signature Dish – Verwaltungsportal",
+  description: "Verwaltungsportal für N_Krypted und Signature Dish",
 };
 
 export default function RootLayout({

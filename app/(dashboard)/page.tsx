@@ -47,7 +47,7 @@ export default function DashboardOverviewPage() {
               icon={UtensilsCrossed}
             />
             <StatCard
-              title="Gesamtbewertungen"
+              title="Bewertungen insgesamt"
               value={(stats?.totalReviews ?? 0).toString()}
               icon={ThumbsUp}
             />

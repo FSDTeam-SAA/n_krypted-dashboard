@@ -60,7 +60,7 @@ function ResetPasswordContent() {
   return (
     <div className="flex flex-col items-center text-center">
       <h2 className="text-xl sm:text-2xl font-bold text-[#1E1E1E] mb-2">
-        Kennwort ändern
+        Passwort ändern
       </h2>
       <p className="text-xs sm:text-sm text-[#718096] max-w-sm mb-8 leading-relaxed">
         Ihr neues Passwort sollte leicht zu merken und schwer zu erraten sein.

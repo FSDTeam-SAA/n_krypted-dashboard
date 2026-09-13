@@ -15,14 +15,14 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
   const user = session?.user;
 
   const getPageTitle = () => {
-    if (pathname === "/") return "Dashboard-Übersicht";
+    if (pathname === "/") return "Übersicht";
     if (pathname.startsWith("/users")) return "Benutzerverwaltung";
-    if (pathname.startsWith("/restaurants")) return "Restaurant Management";
+    if (pathname.startsWith("/restaurants")) return "Restaurantverwaltung";
     if (pathname.startsWith("/reviews")) return "Bewertungen";
     if (pathname.startsWith("/terms-and-conditions")) return "Geschäftsbedingungen";
-    if (pathname.startsWith("/privacy-policy")) return "Datenschutzrichtlinie";
+    if (pathname.startsWith("/privacy-policy")) return "Datenschutzerklärung";
     if (pathname.startsWith("/settings")) return "Einstellungen";
-    return "Dashboard";
+    return "Verwaltungsportal";
   };
 
   const userName = user?.name ?? "";

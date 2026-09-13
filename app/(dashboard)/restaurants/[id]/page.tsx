@@ -94,7 +94,7 @@ export default function RestaurantDetailsPage({ params }: RestaurantDetailsPageP
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           title="Restaurantdaten und Standort bearbeiten"
-          description={`Stammdaten, Vorschaubild und Kartenposition für "${restaurant.title}" anpassen. Signature Dishes werden separat verwaltet.`}
+          description={`Stammdaten, Vorschaubild und Kartenposition für "${restaurant.title}" anpassen. Signature-Gerichte werden separat verwaltet.`}
           maxWidth="max-w-4xl"
         >
           <RestaurantForm
@@ -113,7 +113,7 @@ export default function RestaurantDetailsPage({ params }: RestaurantDetailsPageP
         className="inline-flex items-center gap-2 text-xs font-semibold text-[#0097A7] hover:underline sm:text-sm"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>Zurück zum Restaurant Management</span>
+        <span>Zurück zur Restaurantverwaltung</span>
       </Link>
 
       {isLoading ? (
@@ -156,7 +156,7 @@ export default function RestaurantDetailsPage({ params }: RestaurantDetailsPageP
                 className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#0097A7] px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#00838F]"
               >
                 <ChefHat className="h-4 w-4" />
-                <span>Signature Dishes verwalten</span>
+                <span>Signature-Gerichte verwalten</span>
               </Link>
               <Button
                 type="button"
@@ -225,12 +225,12 @@ export default function RestaurantDetailsPage({ params }: RestaurantDetailsPageP
                 icon: Star,
               },
               {
-                label: "Gesamtbewertungen",
+                label: "Bewertungen insgesamt",
                 value: restaurant.reviewCount.toString(),
                 icon: MessageSquare,
               },
               {
-                label: "Gesamteinchecken",
+                label: "Check-ins insgesamt",
                 value: restaurant.totalCheckIns.toString(),
                 icon: ThumbsUp,
               },

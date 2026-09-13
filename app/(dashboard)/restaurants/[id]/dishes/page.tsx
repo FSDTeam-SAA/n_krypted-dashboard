@@ -31,7 +31,7 @@ export default function RestaurantDishesPage({ params }: RestaurantDishesPagePro
         className="inline-flex items-center gap-2 text-sm font-semibold text-[#0097A7] hover:underline"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>Zurück zum Restaurant Management</span>
+        <span>Zurück zur Restaurantverwaltung</span>
       </Link>
 
       <section className="rounded-3xl border border-[#F0ECE1] bg-white p-6 shadow-xs sm:p-8">
@@ -55,7 +55,7 @@ export default function RestaurantDishesPage({ params }: RestaurantDishesPagePro
                   {restaurant.title}
                 </h2>
                 <p className="mt-1 text-sm text-[#718096]">
-                  Signature Dishes und weitere Gerichte dieses Restaurants zentral verwalten.
+                  Signature-Gerichte und weitere Gerichte dieses Restaurants zentral verwalten.
                 </p>
               </div>
               <Link

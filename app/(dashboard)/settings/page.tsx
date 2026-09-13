@@ -408,7 +408,7 @@ export default function SettingsPage() {
           onClick={() => setIsPasswordOpen(!isPasswordOpen)}
         >
           <h4 className="text-sm font-semibold text-[#1E1E1E]">
-            Kennwort ändern
+            Passwort ändern
           </h4>
 
           <div className="flex items-center gap-3">

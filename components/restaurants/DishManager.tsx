@@ -99,6 +99,14 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    if (form.isSignatureDish && !form.description?.trim()) {
+      toast.error("Bitte das Signature-Gericht beschreiben.");
+      return;
+    }
+    if (form.isSignatureDish && !editing?.isSignatureDish && signatureCount >= 3) {
+      toast.error("Maximal 3 Signature-Gerichte pro Restaurant.");
+      return;
+    }
     if ((form.images?.length ?? 0) + (form.imageFiles?.length ?? 0) === 0) {
       toast.error("Bitte laden Sie mindestens ein Gerichtsbild hoch.");
       return;
@@ -402,6 +410,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
               <input
                 type="checkbox"
                 checked={form.isSignatureDish}
+                disabled={!editing?.isSignatureDish && !form.isSignatureDish && signatureCount >= 3}
                 onChange={(event) =>
                   setForm({ ...form, isSignatureDish: event.target.checked })
                 }
@@ -409,7 +418,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
               />
               <span>
                 <strong className="block">Signature-Gericht</strong>
-                <small className="text-[#718096]">Als besondere Spezialität hervorheben.</small>
+                <small className="text-[#718096]">Als besondere Spezialität hervorheben (maximal 3 pro Restaurant).</small>
               </span>
             </label>
             <label className="flex items-start gap-3 rounded-xl border border-[#FEEFB3] bg-white p-3 text-sm font-medium">

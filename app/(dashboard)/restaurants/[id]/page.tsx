@@ -25,6 +25,7 @@ import { ReviewCard } from "@/components/dashboard/ReviewCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice } from "@/lib/utils";
+import { photoLabels } from "@/components/restaurants/RestaurantPhotosEditor";
 import { RestaurantForm } from "@/components/restaurants/RestaurantForm";
 import { Modal } from "@/components/ui/modal";
 
@@ -276,22 +277,25 @@ export default function RestaurantDetailsPage({ params }: RestaurantDetailsPageP
                 Keine Bilder vorhanden.
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                {restaurant.images.map((image, index) => (
-                  <div
-                    key={`${image}-${index}`}
-                    className="relative h-44 overflow-hidden rounded-2xl shadow-2xs"
-                  >
-                    <Image
-                      src={image}
-                      alt={`${restaurant.title} ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                    />
-                  </div>
-                ))}
-              </div>
+              <div className="space-y-5">
+                  {Object.entries(photoLabels).map(([category, label]) => {
+                    const photos = restaurant.images.filter((_, index) => (restaurant.photoCategories?.[index] ?? "other") === category);
+                    return (
+                      <div key={category} className="space-y-2">
+                        <h4 className="text-sm font-semibold">{label}</h4>
+                        {photos.length === 0 ? <p className="text-xs text-slate-500">Keine Bilder vorhanden.</p> : (
+                          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                            {photos.map((image, index) => (
+                              <div key={image + index} className="relative h-44 overflow-hidden rounded-2xl shadow-2xs">
+                                <Image src={image} alt={label + " " + (index + 1)} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
             )}
           </section>
 

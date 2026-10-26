@@ -120,6 +120,8 @@ export interface CategoryItem {
   categoryName: string;
 }
 
+export type PhotoCategory = "interior" | "exterior" | "other";
+
 export interface RestaurantItem {
   _id: string;
   title: string;
@@ -138,6 +140,7 @@ export interface RestaurantItem {
   rejectionReason?: string;
   dishes: DishItem[];
   images: string[];
+  photoCategories?: PhotoCategory[];
   offers: string[];
   status: "activate" | "deactivate";
   category?: CategoryItem | string;
@@ -170,6 +173,7 @@ export interface RestaurantPayload {
   category?: string;
   images?: string[];
   imageFiles?: File[];
+  photoCategories?: PhotoCategory[];
   offers?: string[];
   location: {
     address: string;
@@ -554,6 +558,7 @@ const createRestaurantFormData = (
   formData.append("description", data.description);
   formData.append("price", String(data.price ?? 0));
   formData.append("location", JSON.stringify(data.location));
+  if (data.photoCategories) formData.append("photoCategories", JSON.stringify(data.photoCategories));
   formData.append("existingImages", JSON.stringify(data.images ?? []));
   formData.append("offers", JSON.stringify(data.offers ?? []));
 

@@ -25,7 +25,7 @@ import { Modal } from "@/components/ui/modal";
 
 export default function RestaurantManagementPage() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const isAdmin = session?.user?.role === "admin";
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -146,7 +146,21 @@ export default function RestaurantManagementPage() {
     }
   };
 
-  if (!isAdmin) return <RestaurantOwnerWorkspace />;
+  if (sessionStatus === "loading") {
+    return (
+      <section className="rounded-3xl border border-[#F0ECE1] bg-white p-6 shadow-xs sm:p-8">
+        <div className="space-y-4">
+          <Skeleton className="h-7 w-52" />
+          <Skeleton className="h-4 w-80 max-w-full" />
+          <Skeleton className="h-48 w-full" />
+        </div>
+      </section>
+    );
+  }
+
+  if (session?.user?.role === "restaurant_owner") return <RestaurantOwnerWorkspace />;
+
+  if (!isAdmin) return null;
 
   return (
     <div className="space-y-6">

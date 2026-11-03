@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LocateFixed, Search } from "lucide-react";
 import { Map, MapClickHandler, MapMarker, MapView } from "@/components/ui/map";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { api, getApiErrorMessage } from '@/lib/api';
 
 export interface PickedLocation {
   latitude: number;
@@ -23,48 +24,69 @@ export default function LocationPickerMap({
 }) {
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
-  const center: [number, number] = [value.latitude || 51.1657, value.longitude || 10.4515];
+  const [error, setError] = useState('');
+  const requestId = useRef(0);
+  const center = useMemo<[number, number]>(() => [Number.isFinite(value.latitude) ? value.latitude : 51.1657, Number.isFinite(value.longitude) ? value.longitude : 10.4515], [value.latitude, value.longitude]);
+  useEffect(() => () => { requestId.current++; }, []);
 
   const reverseGeocode = async (latitude: number, longitude: number) => {
+    const request = ++requestId.current;
+    setSearching(true);
+    setError('');
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
-      );
-      const result = await response.json();
+      const response = await api.get('/maps/geocode', { params: { latlng: `${latitude},${longitude}` } });
+      const result = response.data.data[0];
+      if (request !== requestId.current) return;
       onChange({
         latitude,
         longitude,
-        address: result.display_name || value.address,
-        city: result.address?.city || result.address?.town || result.address?.village || value.city,
-        country: result.address?.country || value.country,
+        address: result?.address || value.address,
+        city: result?.city || value.city,
+        country: result?.country || value.country,
       });
     } catch {
+      if (request !== requestId.current) return;
       onChange({ ...value, latitude, longitude });
+      setError('Koordinaten übernommen. Bitte die Adresse im Formular prüfen.');
+    } finally {
+      if (request === requestId.current) setSearching(false);
     }
   };
 
   const search = async () => {
     if (!query.trim()) return;
+    const request = ++requestId.current;
     setSearching(true);
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`
-      );
-      const [result] = await response.json();
-      if (result) await reverseGeocode(Number(result.lat), Number(result.lon));
+      setError('');
+      const response = await api.get('/maps/geocode', { params: { address: query } });
+      const [result] = response.data.data;
+      if (request !== requestId.current) return;
+      if (result) onChange(result);
+      else setError('Kein Standort gefunden.');
+    } catch (e) {
+      if (request !== requestId.current) return;
+      setError(getApiErrorMessage(e, 'Standortsuche fehlgeschlagen.'));
     } finally {
-      setSearching(false);
+      if (request === requestId.current) setSearching(false);
     }
   };
 
   const locate = () => {
-    navigator.geolocation?.getCurrentPosition(({ coords }) => {
-      void reverseGeocode(coords.latitude, coords.longitude);
-    });
+    if (!navigator.geolocation) { setError('Standortbestimmung wird von diesem Browser nicht unterstützt.'); return; }
+    const request = ++requestId.current;
+    setSearching(true);
+    setError('');
+    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      if (request === requestId.current) void reverseGeocode(coords.latitude, coords.longitude);
+    }, () => {
+      if (request === requestId.current) { setSearching(false); setError('Standort nicht verfügbar. Bitte Berechtigung prüfen oder eine Adresse suchen.'); }
+    }, { enableHighAccuracy: true, timeout: 15000 });
   };
 
   return (
     <div className="space-y-3">
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -95,6 +117,7 @@ export default function LocationPickerMap({
             variant="outline"
             size="icon"
             onClick={locate}
+            disabled={searching}
             title="Mein Standort"
             aria-label="Meinen Standort verwenden"
           >

@@ -30,6 +30,7 @@ const modules = {
     container: [
       [{ header: [false, 1, 2, 3, 4, 5, 6] }],
       ["bold", "italic", "underline"],
+      [{ align: [] }],
       [{ list: "bullet" }, { list: "ordered" }],
       ["blockquote", "link"],
       ["undo", "redo"],
@@ -53,6 +54,7 @@ const modules = {
 
 const formats = [
   "header",
+  "align",
   "bold",
   "italic",
   "underline",
@@ -111,7 +113,7 @@ export function QuillRichTextEditor({
 
     editorRef.current
       ?.getEditor()
-      .root.setAttribute("aria-label", "Rechtlichen Inhalt bearbeiten");
+      .root.setAttribute("aria-label", "Inhalt bearbeiten");
   }, [disabled]);
 
   const editorStyle = {

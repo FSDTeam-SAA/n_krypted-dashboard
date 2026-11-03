@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { RichContent } from '@/components/ui/rich-content';
 
 const maxDishImages = 6;
 
@@ -99,7 +101,9 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (form.isSignatureDish && !form.description?.trim()) {
+    if (saveMutation.isPending) return;
+    if (!form.name.trim() || !Number.isFinite(form.price) || form.price < 0) { toast.error('Bitte einen Namen und gültigen Preis eingeben.'); return; }
+    if (form.isSignatureDish && !form.description?.replace(/<[^>]*>/g, '').replaceAll('&nbsp;', ' ').trim()) {
       toast.error("Bitte das Signature-Gericht beschreiben.");
       return;
     }
@@ -113,6 +117,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
     }
     saveMutation.mutate({
       ...form,
+      leadImageIndex: Math.min(form.leadImageIndex || 0, (form.images?.length || 0) + (form.imageFiles?.length || 0) - 1),
       name: form.name.trim(),
       ingredients: (form.ingredients ?? [])
         .flatMap((item) => item.split(","))
@@ -132,6 +137,8 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
     setEditing(dish);
     setForm({
       name: dish.name,
+      tags: dish.tags || [],
+      leadImageIndex: Math.max(0, existingDishImages(dish).indexOf(dish.leadImage || dish.image || '')),
       description: dish.description ?? "",
       price: dish.price,
       image: dish.image ?? "",
@@ -150,6 +157,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
 
   const selectImages = (files?: FileList | null) => {
     if (!files?.length) return;
+    if (Array.from(files).some((file) => !['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type) || file.size > 20 * 1024 * 1024)) { toast.error('Bitte Bilddateien bis jeweils 20 MB auswählen.'); return; }
     const available = Math.max(
       0,
       maxDishImages -
@@ -175,6 +183,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
   const removeExistingImage = (index: number) => {
     setForm((current) => ({
       ...current,
+      leadImageIndex: (current.leadImageIndex || 0) === index ? 0 : (current.leadImageIndex || 0) > index ? (current.leadImageIndex || 0) - 1 : current.leadImageIndex || 0,
       images: (current.images ?? []).filter((_, itemIndex) => itemIndex !== index),
     }));
   };
@@ -190,6 +199,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
     );
     setForm((current) => ({
       ...current,
+      leadImageIndex: (current.leadImageIndex || 0) === (current.images?.length || 0) + index ? 0 : (current.leadImageIndex || 0) > (current.images?.length || 0) + index ? (current.leadImageIndex || 0) - 1 : current.leadImageIndex || 0,
       imageFiles: (current.imageFiles ?? []).filter(
         (_, itemIndex) => itemIndex !== index
       ),
@@ -273,7 +283,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
               <div>
                 <p className="text-xs font-semibold text-[#334155]">Gerichtsbilder</p>
                 <p className="mt-1 text-xs text-[#718096]">
-                  JPG, PNG oder WebP · maximal {maxDishImages} Bilder
+                  JPG, PNG, WebP oder AVIF · maximal {maxDishImages} Bilder
                 </p>
               </div>
               <span className="rounded-full bg-[#E8F8FA] px-2.5 py-1 text-xs font-semibold text-[#007E93]">
@@ -286,7 +296,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
               <input
                 type="file"
                 multiple
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/avif"
                 className="sr-only"
                 onChange={(event) => {
                   selectImages(event.target.files);
@@ -308,7 +318,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
                       className="object-contain p-1"
                       sizes="(max-width: 640px) 50vw, 280px"
                     />
-                    {index === 0 && (
+                    {index === (form.leadImageIndex || 0) && (
                       <span className="absolute bottom-2 left-2 rounded-full bg-black/65 px-2 py-1 text-[10px] font-semibold text-white">
                         Hauptbild
                       </span>
@@ -336,7 +346,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
                       sizes="(max-width: 640px) 50vw, 280px"
                       unoptimized
                     />
-                    {(form.images?.length ?? 0) === 0 && index === 0 && (
+                    {(form.images?.length ?? 0) + index === (form.leadImageIndex || 0) && (
                       <span className="absolute bottom-2 left-2 rounded-full bg-black/65 px-2 py-1 text-[10px] font-semibold text-white">
                         Hauptbild
                       </span>
@@ -355,17 +365,12 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
             )}
           </div>
 
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155] sm:col-span-2">
+          <div className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155] sm:col-span-2">
             <span>Beschreibung</span>
-            <textarea
-              className="min-h-24 w-full rounded-xl border border-[#90CAF9] bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-[#0097A7]"
-              placeholder="Beschreibung des Gerichts..."
-              value={form.description}
-              onChange={(event) =>
-                setForm({ ...form, description: event.target.value })
-              }
-            />
-          </label>
+            <RichTextEditor disabled={saveMutation.isPending} value={form.description || ''} onChange={(description) => setForm({ ...form, description })} minHeight={120} />
+          </div>
+          <label className="text-xs font-semibold">Labels (durch Komma trennen)<Input placeholder="Vegan, Gluten-free, Spicy" value={(form.tags || []).join(', ')} onChange={(e) => setForm({ ...form, tags: e.target.value.split(',').map((v) => v.trim()) })} /></label>
+          <label className="text-xs font-semibold">Hauptbild<select className="block w-full rounded border p-2" value={form.leadImageIndex || 0} onChange={(e) => setForm({ ...form, leadImageIndex: Number(e.target.value) })}>{Array.from({ length: (form.images?.length || 0) + (form.imageFiles?.length || 0) }, (_, i) => <option key={i} value={i}>Foto {i + 1}</option>)}</select></label>
 
           <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155] sm:col-span-2">
             <span>Spezialität des Gerichts (optional)</span>
@@ -519,9 +524,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
                   </span>
                 </div>
                 {dish.description && (
-                  <p className="mt-3 line-clamp-2 text-xs text-[#4A5568]">
-                    {dish.description}
-                  </p>
+                  <RichContent html={dish.description} className="mt-3 line-clamp-2 text-xs text-[#4A5568]" />
                 )}
                 <div className="mt-4 flex justify-end gap-2 border-t border-[#F5F2E8] pt-3">
                   <Button

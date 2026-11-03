@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { contentApi, getApiErrorMessage } from "@/lib/api";
 
-type LegalField = "termsHtml" | "privacyHtml";
+type LegalField = "termsHtml" | "privacyHtml" | "impressumHtml";
 
 interface LegalContentEditorPageProps {
   field: LegalField;

@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node init && next dev",
+    "build": "node init && next build",
+    "start": "node init && next start",
     "lint": "eslint",
     "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
@@ -22,7 +22,7 @@
     "react-dom": "19.2.8",
     "react-quill-new": "^3.8.3",
     "recharts": "^3.10.1",
-    "sanitize-html": "2.17.0",
+    "sanitize-html": "2.18.1",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.6.0"
   },

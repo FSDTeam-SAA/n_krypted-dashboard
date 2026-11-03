@@ -3,14 +3,31 @@
 import dynamic from "next/dynamic";
 import { FormEvent, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { AdminRestaurantPayload, RestaurantItem, RestaurantPayload } from "@/lib/api";
+import {
+  AdminRestaurantPayload,
+  RestaurantItem,
+  RestaurantPayload,
+} from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RestaurantPhoto, RestaurantPhotosEditor } from "./RestaurantPhotosEditor";
+import {
+  RestaurantPhoto,
+  RestaurantPhotosEditor,
+} from "./RestaurantPhotosEditor";
+import {
+  RestaurantDetailsFields,
+  SignatureRegistration,
+  restaurantDefaults,
+} from "./RestaurantDetailsFields";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { SignatureDraft } from "@/lib/api";
+import { toast } from "sonner";
 
 const LocationPickerMap = dynamic(() => import("./LocationPickerMap"), {
   ssr: false,
-  loading: () => <div className="h-80 animate-pulse rounded-2xl bg-slate-100" />,
+  loading: () => (
+    <div className="h-80 animate-pulse rounded-2xl bg-slate-100" />
+  ),
 });
 
 export function RestaurantForm({
@@ -27,34 +44,89 @@ export function RestaurantForm({
   onCancel?: () => void;
 }) {
   const isEditing = Boolean(restaurant);
+  const [extra, setExtra] = useState(() => restaurantDefaults(restaurant));
+  const [signatureDishes, setSignatureDishes] = useState<SignatureDraft[]>([]);
+  const [leadPhotoId, setLeadPhotoId] = useState(
+    String(Math.max(0, restaurant?.images.indexOf(restaurant.leadImage || "") ?? 0)),
+  );
+  const [locationConfirmed, setLocationConfirmed] = useState(
+    Boolean(Number.isFinite(restaurant?.location?.latitude) && Number.isFinite(restaurant?.location?.longitude)),
+  );
   const [title, setTitle] = useState(restaurant?.title ?? "");
   const [description, setDescription] = useState(restaurant?.description ?? "");
-  const [shortDescription, setShortDescription] = useState(restaurant?.shortDescription ?? "");
-  const [price, setPrice] = useState(restaurant?.price?.toString() ?? "0");
+  const [shortDescription, setShortDescription] = useState(
+    restaurant?.shortDescription ?? "",
+  );
   const [photos, setPhotos] = useState<RestaurantPhoto[]>(() =>
     (restaurant?.images ?? []).map((url, index) => ({
-      id: String(index), url, category: restaurant?.photoCategories?.[index] ?? "other",
-    }))
+      id: String(index),
+      url,
+      category: restaurant?.photoCategories?.[index] ?? "other",
+    })),
   );
   const [address, setAddress] = useState(restaurant?.location?.address ?? "");
   const [city, setCity] = useState(restaurant?.location?.city ?? "");
   const [country, setCountry] = useState(restaurant?.location?.country ?? "");
-  const [latitude, setLatitude] = useState(restaurant?.location?.latitude ?? 51.1657);
-  const [longitude, setLongitude] = useState(restaurant?.location?.longitude ?? 10.4515);
+  const [latitude, setLatitude] = useState(
+    restaurant?.location?.latitude ?? 51.1657,
+  );
+  const [longitude, setLongitude] = useState(
+    restaurant?.location?.longitude ?? 10.4515,
+  );
   const [ownerName, setOwnerName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("");
   const [ownerPhone, setOwnerPhone] = useState("");
+  const orderedPhotos = [...photos.filter((photo) => photo.url), ...photos.filter((photo) => photo.file)];
+  const leadImageIndex = Math.max(0, orderedPhotos.findIndex((photo) => photo.id === leadPhotoId));
+  const changePhotos = (next: RestaurantPhoto[]) => {
+    setPhotos(next);
+    setLeadPhotoId((selected) => next.some((photo) => photo.id === selected) ? selected : next[0]?.id || '');
+  };
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    const orderedPhotos = [...photos.filter((photo) => photo.url), ...photos.filter((photo) => photo.file)];
+    if (submitting) return;
+    if (!title.trim() || !description.replace(/<[^>]*>/g, '').replaceAll('&nbsp;', ' ').trim()) {
+      toast.error('Bitte Restaurantname und Beschreibung eingeben.');
+      return;
+    }
+    if (!locationConfirmed || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+      toast.error("Bitte den Standort auf Google Maps bestätigen.");
+      return;
+    }
+    if (
+      !isEditing &&
+      !includeOwner &&
+      (!signatureDishes.length ||
+        signatureDishes.some(
+          (d) =>
+            !d.name.trim() ||
+            !d.description.replace(/<[^>]*>/g, "").trim() ||
+            !d.imageFiles.length,
+        ))
+    ) {
+      toast.error("Bitte 1–3 vollständige Signature-Gerichte hinzufügen.");
+      return;
+    }
+    if (photos.length > 10) {
+      toast.error("Maximal 10 Restaurantfotos.");
+      return;
+    }
+    if (!isEditing && !includeOwner && (!photos.some((photo) => photo.category === 'interior') || !photos.some((photo) => photo.category === 'exterior'))) {
+      toast.error('Bitte mindestens ein Innen- und Außenfoto hinzufügen.');
+      return;
+    }
     const payload: RestaurantPayload = {
-      title,
+      ...extra,
+      leadImageIndex,
+      ...(!isEditing && !includeOwner ? { signatureDishes } : {}),
+      title: title.trim(),
       description,
       shortDescription,
-      price: Number(price) || 0,
-      images: orderedPhotos.flatMap((photo) => photo.url ? [photo.url] : []),
-      imageFiles: orderedPhotos.flatMap((photo) => photo.file ? [photo.file] : []),
+      images: orderedPhotos.flatMap((photo) => (photo.url ? [photo.url] : [])),
+      imageFiles: orderedPhotos.flatMap((photo) =>
+        photo.file ? [photo.file] : [],
+      ),
       photoCategories: orderedPhotos.map((photo) => photo.category),
       location: { address, city, country, latitude, longitude },
     };
@@ -62,33 +134,63 @@ export function RestaurantForm({
       includeOwner && !isEditing
         ? {
             ...payload,
-            owner: { name: ownerName, email: ownerEmail, password: ownerPassword, phoneNumber: ownerPhone },
+            owner: {
+              name: ownerName,
+              email: ownerEmail,
+              password: ownerPassword,
+              phoneNumber: ownerPhone,
+            },
           }
-        : payload
+        : payload,
     );
   };
 
   const labelClass = "flex flex-col gap-2 text-xs font-semibold text-[#334155]";
   return (
     <form onSubmit={submit} className="space-y-6">
+      <fieldset disabled={submitting} className="contents">
       {includeOwner && !isEditing && (
         <fieldset className="grid gap-4 rounded-2xl border border-[#FEEFB3] bg-[#FFFBE9] p-5 sm:grid-cols-2">
-          <legend className="px-2 text-sm font-bold text-[#1E1E1E]">Zugang des Restaurantbesitzers</legend>
+          <legend className="px-2 text-sm font-bold text-[#1E1E1E]">
+            Zugang des Restaurantbesitzers
+          </legend>
           <label className={labelClass}>
             <span>Name</span>
-            <Input required placeholder="Name des Besitzers" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} />
+            <Input
+              required
+              placeholder="Name des Besitzers"
+              value={ownerName}
+              onChange={(e) => setOwnerName(e.target.value)}
+            />
           </label>
           <label className={labelClass}>
             <span>E-Mail</span>
-            <Input required type="email" placeholder="owner@example.com" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} />
+            <Input
+              required
+              type="email"
+              placeholder="owner@example.com"
+              value={ownerEmail}
+              onChange={(e) => setOwnerEmail(e.target.value)}
+            />
           </label>
           <label className={labelClass}>
             <span>Passwort</span>
-            <Input required minLength={6} type="password" placeholder="Mindestens 6 Zeichen" value={ownerPassword} onChange={(e) => setOwnerPassword(e.target.value)} />
+            <Input
+              required
+              minLength={6}
+              type="password"
+              placeholder="Mindestens 6 Zeichen"
+              value={ownerPassword}
+              onChange={(e) => setOwnerPassword(e.target.value)}
+            />
           </label>
           <label className={labelClass}>
             <span>Telefon</span>
-            <Input placeholder="+49 123 456789" value={ownerPhone} onChange={(e) => setOwnerPhone(e.target.value)} />
+            <Input
+              placeholder="+49 123 456789"
+              value={ownerPhone}
+              onChange={(e) => setOwnerPhone(e.target.value)}
+            />
           </label>
         </fieldset>
       )}
@@ -111,17 +213,6 @@ export function RestaurantForm({
                 onChange={(event) => setTitle(event.target.value)}
               />
             </label>
-            <label className={labelClass}>
-              <span>Startpreis (€)</span>
-              <Input
-                min="0"
-                step="0.01"
-                type="number"
-                placeholder="0,00"
-                value={price}
-                onChange={(event) => setPrice(event.target.value)}
-              />
-            </label>
             <label className={`${labelClass} sm:col-span-2`}>
               <span>Kurzbeschreibung</span>
               <Input
@@ -130,32 +221,61 @@ export function RestaurantForm({
                 onChange={(event) => setShortDescription(event.target.value)}
               />
             </label>
-            <label className={`${labelClass} sm:col-span-2`}>
+            <div className={`${labelClass} sm:col-span-2`}>
               <span>Detaillierte Beschreibung</span>
-              <textarea
-                required
-                placeholder="Beschreiben Sie Ihr Restaurant..."
+              <RichTextEditor
+                disabled={submitting}
                 value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                className="min-h-36 w-full resize-y rounded-xl border border-[#90CAF9] bg-white p-4 text-sm text-[#1E1E1E] outline-none transition focus:border-transparent focus:ring-2 focus:ring-[#0097A7]"
+                onChange={setDescription}
+                minHeight={160}
               />
-            </label>
+            </div>
           </div>
-
         </div>
       </section>
-      <RestaurantPhotosEditor photos={photos} onChange={setPhotos} disabled={submitting} />
+      <RestaurantPhotosEditor
+        photos={photos}
+        onChange={changePhotos}
+        disabled={submitting}
+      />
+      <label className="block text-sm">
+        Titelbild
+        <select
+          value={orderedPhotos[leadImageIndex]?.id || ''}
+          disabled={orderedPhotos.length === 0}
+          onChange={(e) => setLeadPhotoId(e.target.value)}
+          className="ml-3 rounded border p-2"
+        >
+          {orderedPhotos.map((photo, i) => (
+            <option key={photo.id} value={photo.id}>
+              Foto {i + 1}
+            </option>
+          ))}
+        </select>
+      </label>
+      <RestaurantDetailsFields value={extra} onChange={setExtra} />
+      {!isEditing && !includeOwner && (
+        <SignatureRegistration
+          disabled={submitting}
+          value={signatureDishes}
+          onChange={setSignatureDishes}
+        />
+      )}
       <section className="overflow-hidden rounded-2xl border border-[#E8EDF2] bg-[#FBFCFD]">
         <div className="border-b border-[#E8EDF2] bg-white px-5 py-4">
-          <h3 className="text-sm font-bold text-[#1E1E1E]">Restaurantstandort</h3>
+          <h3 className="text-sm font-bold text-[#1E1E1E]">
+            Restaurantstandort
+          </h3>
           <p className="mt-1 text-xs text-[#718096]">
-            Die Markierung bestimmt, wo das Restaurant in der App angezeigt und für Check-ins gefunden wird.
+            Die Markierung bestimmt, wo das Restaurant in der App angezeigt und
+            für Check-ins gefunden wird.
           </p>
         </div>
         <div className="space-y-5 p-5">
           <LocationPickerMap
             value={{ latitude, longitude, address, city, country }}
             onChange={(location) => {
+              setLocationConfirmed(true);
               setLatitude(location.latitude);
               setLongitude(location.longitude);
               if (location.address) setAddress(location.address);
@@ -196,7 +316,12 @@ export function RestaurantForm({
       </section>
       <div className="-mx-6 -mb-6 flex flex-col-reverse gap-2 border-t border-[#E8EDF2] bg-white px-6 py-4 sm:-mx-8 sm:-mb-8 sm:flex-row sm:justify-end sm:gap-3 sm:px-8">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} className="sm:min-w-32">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="sm:min-w-32"
+          >
             <span>Abbrechen</span>
           </Button>
         )}
@@ -206,11 +331,12 @@ export function RestaurantForm({
             {isEditing
               ? "Änderungen speichern"
               : includeOwner
-              ? "Restaurant direkt erstellen"
-              : "Zur Genehmigung einreichen"}
+                ? "Restaurant direkt erstellen"
+                : "Zur Genehmigung einreichen"}
           </span>
         </Button>
       </div>
+      </fieldset>
     </form>
   );
 }

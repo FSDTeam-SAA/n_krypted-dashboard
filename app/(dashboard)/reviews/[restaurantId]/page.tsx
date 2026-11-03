@@ -15,6 +15,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   getApiErrorMessage,
+  featureApi,
   restaurantApi,
   reviewApi,
   type ReviewItem,
@@ -143,6 +144,7 @@ export default function RestaurantReviewsPage() {
               <ReviewCard review={review} />
               {isAdmin && (
                 <div className="mt-2 flex justify-end gap-2">
+                  <button type="button" className="rounded-xl border px-3 text-xs" onClick={async () => { try { await featureApi.moderate(review._id, review.status === 'hidden' ? 'active' : 'hidden'); invalidate(); } catch (e) { toast.error(getApiErrorMessage(e, 'Änderung fehlgeschlagen.')); } }}>{review.status === 'hidden' ? 'Einblenden' : 'Ausblenden'}</button>
                   <button
                     type="button"
                     onClick={() => {

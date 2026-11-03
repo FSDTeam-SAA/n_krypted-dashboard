@@ -66,6 +66,8 @@ const navigation = [
     icon: Settings,
     pattern: /^\/settings/,
   },
+  { name: 'Inhalte & Angebote', href: '/content-management', icon: ScrollText, pattern: /^\/content-management/ },
+  { name: 'Impressum', href: '/impressum', icon: ScrollText, pattern: /^\/impressum/ },
 ];
 
 interface SidebarProps {

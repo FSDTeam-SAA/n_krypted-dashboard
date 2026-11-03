@@ -1,4 +1,5 @@
 "use client";
+import { RichContent } from '@/components/ui/rich-content';
 
 import { useState, use } from "react";
 import Image from "next/image";
@@ -260,9 +261,7 @@ export default function RestaurantDetailsPage({ params }: RestaurantDetailsPageP
 
           <section className="space-y-4">
             <h3 className="text-base font-bold text-[#1E1E1E]">Beschreibung</h3>
-            <p className="text-sm leading-relaxed text-[#718096]">
-              {restaurant.description}
-            </p>
+            <RichContent html={restaurant.description} className="text-sm leading-relaxed text-[#718096]" />
           </section>
 
           <section className="space-y-4 border-t border-[#F5F2E8] pt-4">

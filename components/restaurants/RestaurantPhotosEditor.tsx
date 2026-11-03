@@ -46,7 +46,7 @@ export function RestaurantPhotosEditor({ photos, onChange, disabled = false }: {
     <section className="space-y-5 rounded-2xl border border-[#E8EDF2] bg-[#FBFCFD] p-5">
       <div>
         <h3 className="text-sm font-bold">Restaurantfotos</h3>
-        <p className="mt-1 text-xs text-slate-500">Bis zu 4 Fotos pro Bereich. Das erste gespeicherte Foto erscheint auf der Restaurantkarte. Gerichtsfotos werden beim jeweiligen Gericht verwaltet.</p>
+        <p className="mt-1 text-xs text-slate-500">Insgesamt bis zu 10 Fotos, maximal 4 pro Bereich. Das Titelbild wählen Sie unter der Galerie. Gerichtsfotos werden beim jeweiligen Gericht verwaltet.</p>
       </div>
       {(Object.entries(photoLabels) as [PhotoCategory, string][]).map(([category, label]) => {
         const items = photos.filter((photo) => photo.category === category);
@@ -77,7 +77,7 @@ export function RestaurantPhotosEditor({ photos, onChange, disabled = false }: {
             <label className="block text-xs font-medium">
               Fotos hinzufügen (JPG, PNG, WebP, AVIF · max. 20 MB)
               <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif"
-                disabled={disabled || items.length >= 4} className="mt-2 block w-full text-xs"
+                disabled={disabled || items.length >= 4 || photos.length >= 10} className="mt-2 block w-full text-xs"
                 onChange={(event) => {
                   const files = Array.from(event.target.files || []);
                   event.target.value = "";
@@ -85,6 +85,7 @@ export function RestaurantPhotosEditor({ photos, onChange, disabled = false }: {
                     setError("Bitte gültige Bilddateien bis 20 MB auswählen."); return;
                   }
                   if (items.length + files.length > 4) { setError("Maximal 4 Fotos pro Bereich."); return; }
+                  if (photos.length + files.length > 10) { setError('Maximal 10 Restaurantfotos insgesamt.'); return; }
                   setError("");
                   onChange([...photos, ...files.map((file) => ({ id: crypto.randomUUID(), file, category }))]);
                 }} />

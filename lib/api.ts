@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getSession } from "next-auth/react";
+import { buildDishFormData as createDishFormData, buildRestaurantFormData as createRestaurantFormData } from './form-data';
 
 const rawBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000/api";
 export const API_BASE_URL = rawBaseUrl.endsWith("/v1")
@@ -123,6 +124,18 @@ export interface CategoryItem {
 export type PhotoCategory = "interior" | "exterior" | "other";
 
 export interface RestaurantItem {
+  categories?: string[];
+  contactEmail?: string;
+  contactPhone?: string;
+  openingHoursSchedule?: OpeningHour[];
+  timeZone?: string;
+  opensAt?: string;
+  leadImage?: string;
+  priceRange?: string;
+  showTeamReviews?: boolean;
+  healthNotice?: string;
+  safetyComment?: string;
+  safetyDisclaimer?: string;
   _id: string;
   title: string;
   shortDescription?: string;
@@ -151,6 +164,10 @@ export interface RestaurantItem {
 }
 
 export interface DishItem {
+  tags?: string[];
+  leadImage?: string;
+  rating?: number;
+  reviewCount?: number;
   _id: string;
   name: string;
   description?: string;
@@ -166,6 +183,16 @@ export interface DishItem {
 }
 
 export interface RestaurantPayload {
+  categories?: string[];
+  contactEmail?: string;
+  contactPhone?: string;
+  openingHours?: OpeningHour[];
+  timeZone?: string;
+  opensAt?: string;
+  priceRange?: string;
+  leadImageIndex?: number;
+  showTeamReviews?: boolean;
+  signatureDishes?: SignatureDraft[];
   title: string;
   shortDescription?: string;
   description: string;
@@ -184,6 +211,22 @@ export interface RestaurantPayload {
   };
 }
 
+export interface OpeningHour { day: string; open: string; close: string; closed: boolean }
+export interface SignatureDraft { clientId?: string; name: string; description: string; price: number; imageFiles: File[] }
+export interface CatalogEntry { _id: string; kind: 'city' | 'tag'; name: string; country: string; active: boolean }
+export interface AppSettings { instagramUrl: string; tiktokUrl: string; contactEmail: string; contactPhone: string; contactAddress: string; showTeamReviews: boolean }
+export interface PromotionItem { _id: string; restaurant: { _id: string; name: string }; dish?: { _id: string; name: string }; title: string; text: string; bannerUrl: string; discountType: 'none' | 'percent' | 'amount'; discountValue: number; startsAt: string; endsAt: string; active: boolean }
+export const featureApi = {
+  entries: async (): Promise<CatalogEntry[]> => (await api.get('/admin/catalog')).data.data,
+  saveEntry: async (data: Omit<CatalogEntry, '_id'>, id?: string) => id ? api.put(`/admin/catalog/${id}`, data) : api.post('/admin/catalog', data),
+  settings: async (): Promise<AppSettings> => (await api.get('/content/app-settings')).data.settings,
+  saveSettings: async (data: AppSettings) => api.put('/content/app-settings', data),
+  promotions: async (): Promise<PromotionItem[]> => (await api.get('/admin/promotions')).data.data,
+  savePromotion: async (data: Omit<PromotionItem, '_id' | 'restaurant' | 'dish'> & { restaurant: string; dish?: string | null }, id?: string) => id ? api.put(`/admin/promotions/${id}`, data) : api.post('/admin/promotions', data),
+  moderate: async (id: string, status: 'active' | 'hidden') => api.patch(`/admin/reviews/${id}/status`, { status }),
+  teamReview: async (data: { restaurantId: string; dishId?: string; rating: number; comment: string; status: string }) => api.post('/admin/team-reviews', data),
+};
+
 export interface AdminRestaurantPayload extends RestaurantPayload {
   owner: {
     name: string;
@@ -194,6 +237,8 @@ export interface AdminRestaurantPayload extends RestaurantPayload {
 }
 
 export interface DishPayload {
+  tags?: string[];
+  leadImageIndex?: number;
   name: string;
   description?: string;
   price: number;
@@ -209,6 +254,9 @@ export interface DishPayload {
 }
 
 export interface ReviewItem {
+  reviewType?: 'customer' | 'sd_admin';
+  status?: 'active' | 'hidden' | 'deleted';
+  adminAuthor?: { _id: string; name: string };
   _id: string;
   userID?: {
     _id: string;
@@ -254,6 +302,7 @@ export interface ReviewRestaurantSummary {
 }
 
 export interface LegalContent {
+  impressumHtml: string;
   termsHtml: string;
   privacyHtml: string;
   updatedAt?: string | null;
@@ -343,6 +392,7 @@ const mapUser = (user: RawUser): UserItem => ({
 });
 
 const mapRestaurant = (deal: RawRestaurant): RestaurantItem => ({
+  ...deal,
   _id: deal._id,
   title: deal.title,
   shortDescription: deal.shortDescription,
@@ -531,44 +581,6 @@ export const checkInApi = {
   },
 };
 
-const createDishFormData = (data: DishPayload): FormData => {
-  const formData = new FormData();
-  formData.append("name", data.name);
-  formData.append("price", String(data.price));
-  formData.append("description", data.description ?? "");
-  formData.append("category", data.category ?? "");
-  formData.append("specialtyDescription", data.specialtyDescription ?? "");
-  formData.append("ingredients", JSON.stringify(data.ingredients ?? []));
-  formData.append("preparationProcess", data.preparationProcess ?? "");
-  formData.append("isSignatureDish", String(Boolean(data.isSignatureDish)));
-  formData.append("isActive", String(data.isActive ?? true));
-
-  formData.append("existingImages", JSON.stringify(data.images ?? []));
-  data.imageFiles?.forEach((file) => formData.append("images", file));
-
-  return formData;
-};
-
-const createRestaurantFormData = (
-  data: RestaurantPayload | AdminRestaurantPayload
-): FormData => {
-  const formData = new FormData();
-  formData.append("title", data.title);
-  formData.append("shortDescription", data.shortDescription ?? "");
-  formData.append("description", data.description);
-  formData.append("price", String(data.price ?? 0));
-  formData.append("location", JSON.stringify(data.location));
-  if (data.photoCategories) formData.append("photoCategories", JSON.stringify(data.photoCategories));
-  formData.append("existingImages", JSON.stringify(data.images ?? []));
-  formData.append("offers", JSON.stringify(data.offers ?? []));
-
-  if (data.category) formData.append("category", data.category);
-  if ("owner" in data) formData.append("owner", JSON.stringify(data.owner));
-  data.imageFiles?.forEach((file) => formData.append("images", file));
-
-  return formData;
-};
-
 export const restaurantApi = {
   getAllRestaurants: async (params?: {
     page?: number;
@@ -709,11 +721,12 @@ export const reviewApi = {
 export const contentApi = {
   getLegalContent: async (): Promise<LegalContent> => {
     const response = await api.get('/content/legal');
-    return response.data?.content ?? { termsHtml: '', privacyHtml: '' };
+    return response.data?.content ?? { termsHtml: '', privacyHtml: '', impressumHtml: '' };
   },
   updateLegalContent: async (payload: {
     termsHtml?: string;
     privacyHtml?: string;
+    impressumHtml?: string;
   }): Promise<LegalContent> => {
     const response = await api.put('/content/legal', payload);
     return response.data?.content;

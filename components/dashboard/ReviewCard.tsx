@@ -60,7 +60,8 @@ export function ReviewCard({ review }: ReviewCardProps) {
               </div>
               <div>
                 <div className="text-sm font-semibold text-[#1E1E1E]">
-                  {review.userID?.name ?? "Benutzer nicht verf\u00fcgbar"}
+                  {review.reviewType === 'sd_admin' ? `★ Signature Dish Team · ${review.adminAuthor?.name || ''}` : review.userID?.name ?? "Benutzer nicht verf\u00fcgbar"}
+                  {review.status === 'hidden' && <span className="ml-2 rounded bg-amber-100 px-2 text-xs">Ausgeblendet</span>}
                 </div>
                 <div className="mt-0.5 flex items-center gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (

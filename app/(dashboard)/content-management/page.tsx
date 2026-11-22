@@ -446,7 +446,8 @@ export default function ContentManagement() {
                         }
                       >
                         <option value="">Restaurant allgemein</option>
-                        {selected.dishes.map((d) => (
+                        {/* The backend only accepts team reviews for active dishes. */}
+                        {selected.dishes.filter((d) => d.isActive).map((d) => (
                           <option key={d._id} value={d._id}>
                             {d.name}
                           </option>

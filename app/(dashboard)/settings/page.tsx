@@ -246,7 +246,12 @@ export default function SettingsPage() {
 
   const userName =
     user?.name || `${resolvedFirstName} ${resolvedLastName}`.trim() || "—";
-  const userRole = user?.role === "admin" ? "Administrator" : user?.role || "—";
+  const userRole =
+    user?.role === "admin"
+      ? "Administrator"
+      : user?.role === "restaurant_owner"
+        ? "Restaurantbesitzer"
+        : user?.role || "—";
 
   return (
     <div className="bg-white rounded-3xl border border-[#F0ECE1] p-6 sm:p-8 shadow-xs space-y-6">
@@ -392,7 +397,9 @@ export default function SettingsPage() {
                   placeholder="E-Mail-Adresse"
                   value={resolvedEmail}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={!isContactEditing || isSavingContact}
+                  // The profile API cannot change the e-mail address; editing it
+                  // here would be silently discarded after a "success" toast.
+                  disabled
                   className="h-11 text-xs border-[#90CAF9] focus-visible:ring-[#0097A7]"
                 />
               </label>

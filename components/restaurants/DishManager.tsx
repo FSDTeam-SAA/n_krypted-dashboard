@@ -119,6 +119,12 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
       ...form,
       leadImageIndex: Math.min(form.leadImageIndex || 0, (form.images?.length || 0) + (form.imageFiles?.length || 0) - 1),
       name: form.name.trim(),
+      // Raw input is split here so typing spaces works and empty labels
+      // (e.g. a trailing comma) are not rejected by the backend.
+      tags: (form.tags ?? [])
+        .flatMap((item) => item.split(","))
+        .map((item) => item.trim())
+        .filter(Boolean),
       ingredients: (form.ingredients ?? [])
         .flatMap((item) => item.split(","))
         .map((item) => item.trim())
@@ -369,7 +375,7 @@ export function DishManager({ restaurant }: { restaurant: RestaurantItem }) {
             <span>Beschreibung</span>
             <RichTextEditor disabled={saveMutation.isPending} value={form.description || ''} onChange={(description) => setForm({ ...form, description })} minHeight={120} />
           </div>
-          <label className="text-xs font-semibold">Labels (durch Komma trennen)<Input placeholder="Vegan, Gluten-free, Spicy" value={(form.tags || []).join(', ')} onChange={(e) => setForm({ ...form, tags: e.target.value.split(',').map((v) => v.trim()) })} /></label>
+          <label className="text-xs font-semibold">Labels (durch Komma trennen)<Input placeholder="Vegan, Gluten-free, Spicy" value={(form.tags || []).join(', ')} onChange={(e) => setForm({ ...form, tags: [e.target.value] })} /></label>
           <label className="text-xs font-semibold">Hauptbild<select className="block w-full rounded border p-2" value={form.leadImageIndex || 0} onChange={(e) => setForm({ ...form, leadImageIndex: Number(e.target.value) })}>{Array.from({ length: (form.images?.length || 0) + (form.imageFiles?.length || 0) }, (_, i) => <option key={i} value={i}>Foto {i + 1}</option>)}</select></label>
 
           <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#334155] sm:col-span-2">

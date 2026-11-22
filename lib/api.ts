@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 import { buildDishFormData as createDishFormData, buildRestaurantFormData as createRestaurantFormData } from './form-data';
 
 const rawBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000/api";
@@ -24,10 +24,20 @@ async function getSessionToken(): Promise<string | undefined> {
   if (!pendingSessionToken) {
     pendingSessionToken = getSession()
       .then((session) => {
+        if (session?.error === "RefreshAccessTokenError") {
+          // The backend refresh token was rejected; the session is unusable.
+          cachedSessionToken = null;
+          void signOut({ callbackUrl: "/signin" });
+          return undefined;
+        }
         const value = session?.accessToken;
         cachedSessionToken = {
           value,
-          expiresAt: Date.now() + SESSION_TOKEN_CACHE_MS,
+          // Never reuse a cached token past (or close to) its backend expiry.
+          expiresAt: Math.min(
+            Date.now() + SESSION_TOKEN_CACHE_MS,
+            (session?.accessTokenExpires ?? Infinity) - 30 * 1000
+          ),
         };
         return value;
       })
@@ -272,7 +282,7 @@ export interface ReviewItem {
     category?: CategoryItem | string;
     dishes?: DishItem[];
   };
-  dishID?: string;
+  dishID?: string | DishItem;
   checkInID?: {
     _id: string;
     checkedInAt: string;
@@ -360,6 +370,7 @@ interface RawUser
   extends Omit<UserItem, "checkInCount" | "reviewCount" | "status"> {
   checkInCount?: number;
   reviewCount?: number;
+  status?: string;
 }
 
 interface RawRestaurant extends Partial<RestaurantItem> {
@@ -388,7 +399,8 @@ const mapUser = (user: RawUser): UserItem => ({
   ...user,
   checkInCount: user.checkInCount ?? 0,
   reviewCount: user.reviewCount ?? 0,
-  status: user.isVerified ? "Aktiv" : "Inaktiv",
+  // Account status (active/pending/blocked) decides; isVerified is the fallback.
+  status: (user.status ? user.status === "active" : user.isVerified) ? "Aktiv" : "Inaktiv",
 });
 
 const mapRestaurant = (deal: RawRestaurant): RestaurantItem => ({
@@ -419,7 +431,11 @@ const mapReview = (review: RawReview): ReviewItem => {
     .filter(Boolean)
     .join(", ");
   const category = deal?.category;
-  const dish = deal?.dishes?.find((item) => item._id === review.dishID);
+  // The backend populates dishID as a full dish object.
+  const dish =
+    review.dishID && typeof review.dishID === "object"
+      ? review.dishID
+      : deal?.dishes?.find((item) => item._id === review.dishID);
 
   return {
     ...review,
@@ -445,13 +461,10 @@ export const authApi = {
   },
   forgotPassword: async (data: { email: string }) =>
     (await api.post("/auth/forgot-password", data)).data,
-  verifyOtp: async (data: { email: string; code: string }) => {
-    const response = await api.post("/auth/verify", data);
-    if (response.data?.token && typeof window !== "undefined") {
-      localStorage.setItem("nk_access_token", response.data.token);
-    }
-    return response.data;
-  },
+  // The token returned here is a password-reset token, not an access token,
+  // so it must not be stored as the API bearer token.
+  verifyOtp: async (data: { email: string; code: string }) =>
+    (await api.post("/auth/verify", data)).data,
   resetPassword: async (data: {
     token?: string;
     email: string;

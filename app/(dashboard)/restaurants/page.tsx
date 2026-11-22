@@ -65,6 +65,7 @@ export default function RestaurantManagementPage() {
       setEditingRestaurant(null);
       toast.success("Restaurant wurde erfolgreich aktualisiert.");
       queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["restaurant-detail"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },
     onError: (error: unknown) =>
@@ -77,6 +78,7 @@ export default function RestaurantManagementPage() {
     onSuccess: (_, variables) => {
       toast.success(variables.status === "approved" ? "Restaurant genehmigt" : "Restaurant abgelehnt");
       queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["restaurant-detail"] });
     },
     onError: (error: unknown) =>
       toast.error(getApiErrorMessage(error, "Genehmigung konnte nicht geändert werden")),
@@ -87,6 +89,7 @@ export default function RestaurantManagementPage() {
     onSuccess: () => {
       toast.success("Status des Restaurants erfolgreich geändert!");
       queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["restaurant-detail"] });
     },
     onError: () =>
       toast.error("Der Restaurantstatus konnte nicht geändert werden."),

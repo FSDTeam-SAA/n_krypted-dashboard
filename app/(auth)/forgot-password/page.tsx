@@ -25,8 +25,9 @@ export default function ForgotPasswordPage() {
     try {
       setIsLoading(true);
       await authApi.forgotPassword({ email });
-      toast.success("Wenn die E-Mail-Adresse registriert ist, wurde ein Link zum Zurücksetzen gesendet.");
-      router.push("/signin");
+      // The backend emails a 6-digit OTP (no link), which is entered on /verify-otp.
+      toast.success("Wenn die E-Mail-Adresse registriert ist, wurde ein Bestätigungscode gesendet.");
+      router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, "Fehler beim Senden des Codes."));
     } finally {
